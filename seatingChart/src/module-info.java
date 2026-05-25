@@ -1,5 +1,6 @@
 module seatingChart {
 	requires javafx.controls;
+	requires javafx.graphics;
 	
-	opens application to javafx.graphics, javafx.fxml;
+	opens applicationStart to javafx.graphics, javafx.fxml;
 }
