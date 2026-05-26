@@ -28,13 +28,13 @@ public class NewChartView {
 	
 	private static Label promptRows = new Label();
 	private static Label promptTotalSeats = new Label();
-	private static Label promptSingerTypes = new Label();
-	private static Label promptSingers = new Label();
+	private static Label promptMemberTypes = new Label();
+	private static Label promptMembers = new Label();
 	
 	private static TextField inputRows = new TextField();
 	private static TextField inputTotalSeats = new TextField();
-	private static TextArea inputSingerTypes = new TextArea();
-	private static TextArea inputSingers = new TextArea();
+	private static TextArea inputMemberTypes = new TextArea();
+	private static TextArea inputMembers = new TextArea();
 	// fileLocation (will probably be allocated to first save in application)
 	
 	private static Alert emptyFieldAlert = new Alert(AlertType.WARNING);
@@ -79,27 +79,28 @@ public class NewChartView {
 		
 		setupButtonUI(confirmButton, "Arial", 16, 200, Pos.CENTER, 575, 545);
 		confirmButton.setOnAction((_) -> {
-			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputSingers.getText().isEmpty() || inputSingerTypes.getText().isEmpty()) {
+			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputMembers.getText().isEmpty() || inputMemberTypes.getText().isEmpty()) {
 				emptyFieldAlert.showAndWait();
 			} else {
-				Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputSingers.getText());
+				Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText());
+				applicationMain.ChartEditor.editChart(stage, chart);
 			}
 		});
 		promptRows.setText("Rows: ");
 		setupLabelUI(promptRows, "Arial", 16, 50, Pos.TOP_LEFT, 25, 100);
 		promptTotalSeats.setText("Total Seats:");
 		setupLabelUI(promptTotalSeats, "Arial", 16, 50, Pos.TOP_LEFT, 25, 140);		
-		promptSingers.setText("Singers: ");
-		setupLabelUI(promptSingers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);
-		promptSingerTypes.setText("Singer Types:");
-		setupLabelUI(promptSingerTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 340);		
+		promptMembers.setText("Members: ");
+		setupLabelUI(promptMembers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);
+		promptMemberTypes.setText("Member Types:");
+		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 340);		
 		
 		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 130, 95);	
 		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 130, 135);
-		inputSingers.setPromptText("Singer Name, Part");
-		setupTextAreaUI(inputSingers, "Arial", 16, 600, 150, 130, 175);	
-		inputSingerTypes.setPromptText("Part Name, Color");
-		setupTextAreaUI(inputSingerTypes, "Arial", 16, 600, 150, 130, 335);	
+		inputMembers.setPromptText("Member Name, Part");
+		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 130, 175);	
+		inputMemberTypes.setPromptText("Part Name, Color");
+		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 150, 130, 335);	
 		
 		emptyFieldAlert.setTitle("Empty Field(s)");
 		emptyFieldAlert.setHeaderText("One or more fields have been read as empty.");
@@ -108,8 +109,8 @@ public class NewChartView {
 		rootPane.getChildren().addAll(title, confirmButton,
 				promptRows, inputRows,
 				promptTotalSeats, inputTotalSeats,
-				promptSingers, inputSingers,
-				promptSingerTypes, inputSingerTypes);
+				promptMembers, inputMembers,
+				promptMemberTypes, inputMemberTypes);
 		
 	}
 	

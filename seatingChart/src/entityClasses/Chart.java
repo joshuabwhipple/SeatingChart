@@ -13,7 +13,7 @@ public class Chart {
 	private int rows;
 	private int seatsPerRow;
 	private int totalSeats;
-	private ArrayList<Singer> singers;
+	private ArrayList<Member> members;
 	
 	/*-*
 	 
@@ -21,12 +21,12 @@ public class Chart {
 	 
 	*/
 	
-	public Chart(String rows, String totalSeats, String singerList) {
+	public Chart(String rows, String totalSeats, String memberList) {
 		this.rows = Integer.parseInt(rows);
 		this.totalSeats = Integer.parseInt(totalSeats);
 		this.seatsPerRow = Math.ceilDiv(this.totalSeats, this.rows);
-		singers = new ArrayList<Singer>();
-		readList(singerList);
+		members = new ArrayList<Member>();
+		readList(memberList);
 	}
 	
 	/*-*
@@ -35,22 +35,22 @@ public class Chart {
 	 
 	*/
 	
-	private void readList(String singerList) {
-		int commaIndex = singerList.indexOf(',');
-		int newLineIndex = singerList.indexOf('\n');
+	private void readList(String memberList) {
+		int commaIndex = memberList.indexOf(',');
+		int newLineIndex = memberList.indexOf('\n');
 		if (newLineIndex >= 0) {
-			String name = singerList.substring(0, commaIndex).strip();
-			String part = singerList.substring(commaIndex + 1, newLineIndex).strip();
+			String name = memberList.substring(0, commaIndex).strip();
+			String part = memberList.substring(commaIndex + 1, newLineIndex).strip();
 			System.out.println(name + " " + part);
-			Singer readSinger = new Singer(name, part);
-			singers.add(readSinger);
-			readList(singerList.substring(newLineIndex+1));
+			Member readMember = new Member(name, part);
+			members.add(readMember);
+			readList(memberList.substring(newLineIndex+1));
 		} else {
-			String name = singerList.substring(0, commaIndex).strip();
-			String part = singerList.substring(commaIndex + 1, singerList.length()).strip();
+			String name = memberList.substring(0, commaIndex).strip();
+			String part = memberList.substring(commaIndex + 1, memberList.length()).strip();
 			System.out.println(name + " " + part);
-			Singer readSinger = new Singer(name, part);
-			singers.add(readSinger);
+			Member readMember = new Member(name, part);
+			members.add(readMember);
 		}
 		
 	}
@@ -66,9 +66,9 @@ public class Chart {
 		this.seatsPerRow = Math.ceilDiv(this.totalSeats, this.rows);
 	}
 	
-	public void setSingers(String singerList) {
-		this.singers = new ArrayList<Singer>();
-		readList(singerList);
+	public void setmembers(String memberList) {
+		this.members = new ArrayList<Member>();
+		readList(memberList);
 	}
 	
 	public int getRows() {
@@ -83,7 +83,7 @@ public class Chart {
 		return this.totalSeats;
 	}	
 	
-	public ArrayList<Singer> getSingers() {
-		return this.singers;
+	public ArrayList<Member> getMembers() {
+		return this.members;
 	}	
 }
