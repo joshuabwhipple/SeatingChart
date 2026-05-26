@@ -1,5 +1,6 @@
 package newChart;
 
+import entityClasses.Chart;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -80,6 +81,8 @@ public class NewChartView {
 		confirmButton.setOnAction((_) -> {
 			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputSingers.getText().isEmpty() || inputSingerTypes.getText().isEmpty()) {
 				emptyFieldAlert.showAndWait();
+			} else {
+				Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputSingers.getText());
 			}
 		});
 		promptRows.setText("Rows: ");
