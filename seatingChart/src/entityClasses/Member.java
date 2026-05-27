@@ -1,5 +1,7 @@
 package entityClasses;
 
+import javafx.util.Pair;
+
 public class Member {
 
 	/*-*
@@ -10,8 +12,7 @@ public class Member {
 	
 	private String name;
 	private String part;
-	private int x = -1;
-	private int y = -1;
+	private Pair<Integer, Integer> coords;
 	
 	/*-*
 	
@@ -22,6 +23,7 @@ public class Member {
 	public Member(String name, String part) {
 		this.name = name;
 		this.part = part;
+		this.coords = new Pair<>(-1, -1);
 	}
 	
 	/*-*
@@ -39,8 +41,11 @@ public class Member {
 	}
 	
 	public void setCoordinates(int x, int y) {
-		this.x = x;
-		this.y = y;
+		coords = new Pair<>(x, y);
+	}
+	
+	public void setCoordinates(Pair<Integer, Integer> coords) {
+		this.coords = coords;
 	}
 	
 	public String getName() {
@@ -52,15 +57,14 @@ public class Member {
 	}
 	
 	public int getX() {
-		return x;
+		return coords.getKey();
 	}
 	
 	public int getY() {
-		return y;
+		return coords.getValue();
 	}
 	
-	public int[] getCoordinates() {
-		int[] coords = {x, y};
+	public Pair<Integer, Integer> getCoordinates() {
 		return coords;
 	}
 	

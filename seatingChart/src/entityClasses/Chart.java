@@ -45,7 +45,7 @@ public class Chart {
 			Member readMember = new Member(name, part);
 			members.add(readMember);
 			readList(memberList.substring(newLineIndex+1));
-		} else {
+		} else if (commaIndex >= 0) {
 			String name = memberList.substring(0, commaIndex).strip();
 			String part = memberList.substring(commaIndex + 1, memberList.length()).strip();
 			System.out.println(name + " " + part);
