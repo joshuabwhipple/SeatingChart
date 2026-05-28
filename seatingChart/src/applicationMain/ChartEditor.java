@@ -1,19 +1,38 @@
 package applicationMain;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Scanner;
+
+import javax.imageio.ImageIO;
 
 import entityClasses.Chart;
 import entityClasses.Member;
+import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -45,6 +64,10 @@ public class ChartEditor {
 	
 	private static Pair<StackPane, Member> selectedMember = null;
 	
+	// Used for presenting save alerts
+	private static boolean edited;
+	private static Alert saveAlert = new Alert(Alert.AlertType.CONFIRMATION);
+	
 	// Chart to edit
 	private static Chart chart;
 	
@@ -53,13 +76,23 @@ public class ChartEditor {
 	private static ToolBar toolBar = new ToolBar();
 	private static Button newButton = new Button("New");
 	private static Button saveButton = new Button("Save");
-	private static Button loadButton = new Button("Load");
+	private static Button saveAsButton = new Button("Save As");
+	private static Button loadButton = new Button("Open");
+	private static Button editSeatsButton = new Button("Edit Seats");
+	private static Button editMembersButton = new Button("Edit Members");
+	private static Button editTypesButton = new Button("Edit Types");
+	private static Button exportButton = new Button("Export");
+	
+	private static Dialog<Pair<String, String>> editSeatsDialog = new Dialog<>();
+	private static Dialog<String> editMembersDialog = new Dialog<>();
+	private static Dialog<String> editTypesDialog = new Dialog<>();
 	
 	private static ArrayList<StackPane> memberSeats;
 	private static ScrollPane memberScroll;
 	private static HBox memberPane;
+	private static ScrollPane chartScroll;
 	private static Pane chartPane;
-	
+
 	// Application Elements
 	
 	private static ChartEditor chartEditorPage;
@@ -84,12 +117,207 @@ public class ChartEditor {
 		chartPane = new Pane();
 		memberSeats = new ArrayList<StackPane>();
 		memberPane = new HBox();
-
+		editSeatsDialog = new Dialog<>();
+		editMembersDialog = new Dialog<>();
+		editTypesDialog = new Dialog<>();
+		toolBar = new ToolBar();
+		
 		if (chartEditorPage == null) {
 			chartEditorPage = new ChartEditor();
 		}
-		
+				
 		// Update dynamic elements
+		
+		saveButton.setOnAction((_) -> {
+			if (chart.getSaveLocation() == null) {
+				saveAs();
+			} else {
+				save();
+			}
+			if (stage.getTitle().indexOf("*") != -1) {
+				stage.setTitle(stage.getTitle().substring(0, stage.getTitle().length()-1));
+			}
+		});
+		saveAsButton.setOnAction((_) -> {
+			saveAs();
+			if (stage.getTitle().indexOf("*") != -1) {
+				stage.setTitle(stage.getTitle().substring(0, stage.getTitle().length()-1));
+			}
+		});
+		loadButton.setOnAction((_) -> {
+			if (edited) {
+				saveAlert.showAndWait().ifPresent(response -> {
+					if (response == ButtonType.OK) {
+						load();
+					} 
+				});
+			} else {
+				load();
+			}
+		});
+		
+		saveAlert.setTitle("Unsaved Changes Confirmation");
+		saveAlert.setHeaderText("Are you sure you want to exit this chart?");
+		saveAlert.setContentText("Any unsaved changes will be lost.");
+		
+		editSeatsDialog.setTitle("Edit Seats");
+		ButtonType confirmButtonType = new ButtonType("Done", ButtonData.OK_DONE);
+		editSeatsDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+		
+		GridPane grid = new GridPane();
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(20, 150, 10, 10));
+		
+		TextField inRows = new TextField();
+		inRows.setText(chart.getRows() + "");
+		TextField inSeats = new TextField();
+		inSeats.setText(chart.getTotalSeats() + "");
+		grid.add(new Label("Rows"), 0, 0);
+		grid.add(inRows, 1, 0);
+		grid.add(new Label("Total Seats"), 0, 1);
+		grid.add(inSeats, 1, 1);
+		editSeatsDialog.getDialogPane().setContent(grid);
+		
+		editSeatsDialog.setResultConverter(dialogButton -> {
+			if (dialogButton == confirmButtonType) {
+				return new Pair<>(inRows.getText(), inSeats.getText());
+			}
+			return null;
+		});
+		
+		editSeatsButton.setOnAction((_) -> {
+			Optional<Pair<String, String>> result = editSeatsDialog.showAndWait();
+			if (result.isPresent()) {
+				chart.setRows(result.get().getKey());
+				chart.setTotalSeats(result.get().getValue());
+				if (!edited) stage.setTitle(stage.getTitle() + "*");
+				edited = true;
+				ChartEditor.editChart(stage, chart);
+			}
+		});
+		
+		editMembersDialog.setTitle("Edit Members");
+		editMembersDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+		
+		TextArea newMembersList = new TextArea();
+		newMembersList.setPromptText("First Name, Last Name, Type");
+		ArrayList<Member> members = chart.getMembers();
+		String oldMembersList = "";
+		for (int i = 0; i < members.size(); ++i) {
+			Member current = members.get(i);
+			oldMembersList += current.getFirstName() + ", " + current.getLastName() + ", " + current.getType() + "\n";
+		}
+		newMembersList.setText(oldMembersList);
+		editMembersDialog.getDialogPane().setContent(newMembersList);
+		
+		editMembersDialog.setResultConverter(dialogButton -> {
+			if (dialogButton == confirmButtonType) {
+				return newMembersList.getText();
+			}
+			return null;
+		});
+		
+		editMembersButton.setOnAction((_) -> {
+			Optional<String> result = editMembersDialog.showAndWait();
+			// Compare new members list to old to see matching entries and save that member,
+			// otherwise create new member to go into member pane
+			if (result.isPresent()) {
+				ArrayList<Member> newMembers = new ArrayList<>();
+				Scanner resultReader = new Scanner(result.get());
+				while (resultReader.hasNextLine()) {
+					String data = resultReader.nextLine();
+					int commaIndex1 = data.indexOf(',');
+					int commaIndex2 = -1;
+					if (commaIndex1 > 0) commaIndex2 = data.substring(commaIndex1 + 1).indexOf(',') + commaIndex1 + 1;
+					String firstName = data.substring(0, commaIndex1).strip();
+					String lastName = data.substring(commaIndex1 + 1, commaIndex2).strip();
+					String type = data.substring(commaIndex2 + 1).strip();
+					Member readMember = new Member(firstName, lastName, type);
+					for (int i = 0; i < members.size(); ++i) {
+						Member current = members.get(i);
+						if (current.getName().equals(firstName + " " + lastName) && current.getType().equals(type)) {
+							readMember.setCoordinates(current.getCoordinates());
+							break;
+						}
+					}
+					newMembers.add(readMember);
+				}
+				resultReader.close();
+				chart.setMembers(newMembers);
+				chart.setColors();
+				if (!edited) stage.setTitle(stage.getTitle() + "*");
+				edited = true;
+				editChart(stage, chart);
+			}
+		});
+		
+		editTypesDialog.setTitle("Edit Types");
+		editTypesDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+		
+		grid = new GridPane();
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(20, 150, 10, 10));
+		
+		TextArea newTypesList = new TextArea();
+		newTypesList.setPromptText("Type Name, Color");
+		ArrayList<Pair<String, Color>> types = chart.getTypes();
+		String oldTypesList = "";
+		for (int i = 0; i < types.size(); ++i) {
+			Pair<String, Color> current = types.get(i);
+			oldTypesList += current.getKey() + ", " + colorName(current.getValue()).get() + "\n";
+		}
+		newTypesList.setText(oldTypesList);
+		grid.add(new Label("Types"), 0, 0);
+		grid.add(newTypesList, 1, 0);
+		editTypesDialog.getDialogPane().setContent(grid);
+		
+		editTypesDialog.setResultConverter(dialogButton -> {
+			if (dialogButton == confirmButtonType) {
+				return newTypesList.getText();
+			}
+			return null;
+		});
+		
+		editTypesButton.setOnAction((_) -> {
+			Optional<String> result = editTypesDialog.showAndWait();
+			if (result.isPresent()) {
+				chart.setTypes(result.get());
+				editChart(stage, chart);
+				if (!edited) stage.setTitle(stage.getTitle() + "*");
+				edited = true;
+			}
+		});
+		
+		exportButton.setOnAction((_) -> {
+			fileChooser.setTitle("Export Seating Chart");
+			fileChooser.getExtensionFilters().addAll(
+					new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png"),
+					new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg")
+			);
+			
+			File file = fileChooser.showSaveDialog(stage);
+			
+			if (file != null) {
+				try {
+					WritableImage screenshot = new WritableImage((int) chartScroll.getBoundsInLocal().getWidth(), (int) chartScroll.getBoundsInLocal().getHeight());
+					chartScroll.snapshot(new SnapshotParameters(), screenshot);
+					
+					String format = "jpg";
+					if (file.getName().toLowerCase().endsWith(".png")) format = "png";
+					
+					ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), format, file);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			fileChooser.getExtensionFilters().removeAll(
+					new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png"),
+					new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg")
+			);
+		});
+		
 		memberPane.setPrefHeight(screenHeight / 6);
 		readChart(chart);
 		
@@ -98,8 +326,30 @@ public class ChartEditor {
 		memberScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 		memberScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		
-		rootPane.setCenter(chartPane);
+		chartScroll = new ScrollPane(chartPane);
+		chartScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+		chartScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+		
+		toolBar.getItems().addAll(newButton, saveButton, saveAsButton, loadButton, new Separator(),
+				editSeatsButton, editMembersButton, editTypesButton, new Separator(), exportButton);
+		
+		rootPane.setTop(toolBar);
+		rootPane.setCenter(chartScroll);
 		rootPane.setBottom(memberScroll);
+		
+		stage.setOnCloseRequest(event -> {
+			event.consume();
+			
+			if (edited) {
+				saveAlert.showAndWait().ifPresent(response -> {
+					if (response == ButtonType.OK) {
+						Platform.exit();
+					} 
+				});
+			} else {
+				Platform.exit();
+			}
+		});
 		
 		// Display page
 		stage.setMaximized(true);
@@ -117,35 +367,19 @@ public class ChartEditor {
 		
 		
 		fileChooser = new FileChooser();
-		fileChooser.setTitle("Select Save File/Folder");
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+S+"Downloads"));
 		
 		newButton.setOnAction((_) -> {
-			newChart.NewChartView.createChart(stage);
-		});
-		saveButton.setOnAction((_) -> {
-			File selectedFile = fileChooser.showSaveDialog(stage);
-			fileChooser.setInitialFileName("chart.txt");
-			if (selectedFile != null) {
-				System.out.println("Selected File: " + selectedFile.getAbsolutePath());
-				try (FileWriter writer = new FileWriter(selectedFile.getAbsolutePath())) {
-					selectedFile.createNewFile();
-					writer.write(chart.getRows() + "," + chart.getTotalSeats() + "\n");
-					ArrayList<Member> members = chart.getMembers();
-					for (int i = 0; i < members.size(); ++i) {
-						Member current = members.get(i);
-						writer.write(current.getName() + "," + current.getPart() + ",");
-						writer.write(current.getX() + "," + current.getY() + "\n");
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			if (edited) {
+				saveAlert.showAndWait().ifPresent(response -> {
+					if (response == ButtonType.OK) {
+						newChart.NewChartView.createChart(stage);
+					} 
+				});
+			} else {
+				newChart.NewChartView.createChart(stage);
 			}
 		});
-		toolBar.getItems().addAll(newButton, saveButton, loadButton);
-		rootPane.setTop(toolBar);
-		
-		rootPane.getChildren().addAll();
 	}
 	
 	private static void readChart(Chart chart) {
@@ -156,17 +390,91 @@ public class ChartEditor {
 		double seatBaseX = screenWidth / 2 - seatWidth / 2 - (seatsPerRow - 1) * (seatWidth / 2);
 		double seatBaseY = screenHeight / 3 - seatHeight / 2 + (rows - 1) * seatHeight;
 		
-		// Unassigned members
+		// Base Chart
+		for (int i = 0; i < rows; ++i) {
+			double seatX = seatBaseX - ((i) % 2) * ((seatWidth+10)/2);
+			int y = i;
+			for (int j = 0; j < seatsPerRow + i % 2; ++j) {
+				int x = j;
+				Rectangle newSeat = new Rectangle(seatX + (seatWidth+10)*j, seatBaseY - (seatHeight+10)*i, seatWidth, seatHeight);
+				newSeat.setFill(Color.LIGHTBLUE);
+				newSeat.setStroke(Color.BLACK);
+				newSeat.setOnMouseDragEntered((_) -> {
+					if (selectedMember != null) {						
+						newSeat.setFill(Color.RED);
+					}
+				});
+				newSeat.setOnMouseDragExited((_) -> {
+					newSeat.setFill(Color.LIGHTBLUE);
+				});
+				newSeat.setOnMouseDragReleased((_) -> {
+					if (selectedMember != null) {
+						newSeat.setFill(Color.LIGHTBLUE);
+						if (selectedMember.getValue().getX() != x || selectedMember.getValue().getY() != y) {
+							if (!edited) stage.setTitle(stage.getTitle() + "*");
+							edited = true;
+						}
+						selectedMember.getValue().setCoordinates(x, y);
+						selectedMember.getKey().setLayoutX(seatX + (seatWidth+10)*x);
+						selectedMember.getKey().setLayoutY(seatBaseY - (seatHeight+10)*y);
+						rootPane.getChildren().remove(selectedMember.getKey());
+						chartPane.getChildren().add(selectedMember.getKey());
+						selectedMember = null;
+					}
+				});
+				chartPane.getChildren().add(newSeat);
+			}
+		}
+		
+		// Members
 		for (int i = 0; i < readMembers.size(); ++i) {
 			Member current = readMembers.get(i);
+			if (current.getY() > chart.getRows() || current.getX() > chart.getSeatsPerRow() + (current.getY() % 2)) {
+				current.setCoordinates(-1, -1);
+			}
 			if (current.getX() == -1) {
 				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
-				newMember.setFill(Color.LIGHTBLUE);
+				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
 				Text name = new Text(current.getName());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();
+				completedRectangle.getChildren().addAll(newMember, name);
+				completedRectangle.setOnMousePressed(event -> {
+					memberPane.getChildren().remove(completedRectangle);
+					selectedMember = new Pair<>(completedRectangle, current);
+					completedRectangle.setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
+					completedRectangle.setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+					completedRectangle.setCursor(Cursor.MOVE);
+					rootPane.getChildren().add(completedRectangle);
+				});
+				completedRectangle.setOnMouseDragged(event -> {
+					if (selectedMember != null) {
+						selectedMember.getKey().setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
+						selectedMember.getKey().setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+					}
+				});
+				completedRectangle.setOnMouseReleased((_) -> {
+					rootPane.getChildren().remove(completedRectangle);
+					selectedMember = null;
+					memberPane.getChildren().add(completedRectangle);
+					completedRectangle.setCursor(Cursor.DEFAULT);
+				});
+				HBox.setMargin(completedRectangle, new Insets(0, 10, 0, 10));
+				memberPane.getChildren().add(completedRectangle);
+				memberSeats.add(completedRectangle);
+			} else {
+				double seatX = seatBaseX - ((current.getY()) % 2) * ((seatWidth+10)/2);
+				Rectangle newMember = new Rectangle(seatX + (seatWidth+10)*current.getX(), seatBaseY - (seatHeight+10)*current.getY(), seatWidth, seatHeight);
+				newMember.setFill(current.getColor());
+				newMember.setStroke(Color.BLACK);
+				Text name = new Text(current.getName());
+				name.setWrappingWidth(seatWidth);
+				name.setTextAlignment(TextAlignment.CENTER);
+				StackPane completedRectangle = new StackPane();
+				completedRectangle.setLayoutX(seatX + (seatWidth+10)*current.getX());
+				completedRectangle.setLayoutY(seatBaseY - (seatHeight+10)*current.getY());
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
 					memberPane.getChildren().remove(completedRectangle);
@@ -187,54 +495,125 @@ public class ChartEditor {
 					completedRectangle.setCursor(Cursor.DEFAULT);
 				});
 				HBox.setMargin(completedRectangle, new Insets(0, 10, 0, 10));
-				memberPane.getChildren().add(completedRectangle);
-				memberSeats.add(completedRectangle);
-			} else {
-				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
-				newMember.setFill(Color.LIGHTBLUE);
-				newMember.setStroke(Color.BLACK);
-				Text name = new Text(current.getName());
-				name.setWrappingWidth(seatWidth);
-				name.setTextAlignment(TextAlignment.CENTER);
-				StackPane completedRectangle = new StackPane();
-				completedRectangle.getChildren().addAll(newMember, name);
-				HBox.setMargin(completedRectangle, new Insets(0, 10, 0, 10));
 				chartPane.getChildren().add(completedRectangle);
 				memberSeats.add(completedRectangle);
 			}
 		}
 		
-		// Base Chart
-		for (int i = 0; i < rows; ++i) {
-			double seatX = seatBaseX - ((i) % 2) * ((seatWidth+10)/2);
-			int y = i;
-			for (int j = 0; j < seatsPerRow + i % 2; ++j) {
-				int x = j;
-				Rectangle newSeat = new Rectangle(seatX + (seatWidth+10)*j, seatBaseY - (seatHeight+10)*i, seatWidth, seatHeight);
-				newSeat.setFill(Color.LIGHTBLUE);
-				newSeat.setStroke(Color.BLACK);
-				newSeat.setOnMouseDragEntered((_) -> {
-					if (selectedMember == null) {						
-						newSeat.setFill(Color.YELLOW);
-					} else {
-						newSeat.setFill(Color.RED);
-					}
-				});
-				newSeat.setOnMouseDragExited((_) -> {
-					newSeat.setFill(Color.LIGHTBLUE);
-				});
-				newSeat.setOnMouseDragReleased((_) -> {
-					newSeat.setFill(Color.LIGHTBLUE);
-					selectedMember.getValue().setCoordinates(x, y);
-					selectedMember.getKey().setLayoutX(seatX + (seatWidth+10)*x);
-					selectedMember.getKey().setLayoutY(seatBaseY - (seatHeight+10)*y);
-					rootPane.getChildren().remove(selectedMember.getKey());
-					chartPane.getChildren().add(selectedMember.getKey());
-				});
-				chartPane.getChildren().add(newSeat);
-			}
-		}
-		
 	}
+	
+	/*-*
+		
+		Methods
+		
+	 */
+	
+	private static void save() {
+		try (FileWriter writer = new FileWriter(chart.getSaveLocation().getAbsolutePath())) {
+			chart.getSaveLocation().createNewFile();
+			ArrayList<Pair<String, Color>> types = chart.getTypes();
+			writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
+			for (int i = 0; i < types.size(); ++i) {
+				writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
+			}
+			ArrayList<Member> members = chart.getMembers();
+			for (int i = 0; i < members.size(); ++i) {
+				Member current = members.get(i);
+				writer.write(current.getFirstName() + "," + current.getLastName() + "," + current.getType() + ",");
+				writer.write(current.getX() + "," + current.getY() + "\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		edited = false;
+	}
+	
+	private static void saveAs() {
+		fileChooser.setTitle("Select Save File");
+		File selectedFile = fileChooser.showSaveDialog(stage);
+		fileChooser.setInitialFileName("chart.txt");
+		if (selectedFile != null) {
+			try (FileWriter writer = new FileWriter(selectedFile.getAbsolutePath())) {
+				selectedFile.createNewFile();
+				ArrayList<Pair<String, Color>> types = chart.getTypes();
+				writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
+				for (int i = 0; i < types.size(); ++i) {
+					writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
+				}
+				ArrayList<Member> members = chart.getMembers();
+				for (int i = 0; i < members.size(); ++i) {
+					Member current = members.get(i);
+					writer.write(current.getFirstName() + "," + current.getLastName() + "," + current.getType() + ",");
+					writer.write(current.getX() + "," + current.getY() + "\n");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			chart.setSaveLocation(selectedFile);
+			fileChooser.setInitialDirectory(selectedFile.getParentFile());
+		}
+		edited = false;
+	}
+	
+	private static void load() {
+		fileChooser.setTitle("Select File To Load");
+		File selectedFile = fileChooser.showOpenDialog(stage);
+		fileChooser.setInitialFileName("");
+		if (selectedFile != null) {
+			String rows = "-1", totalSeats = "-1", typesCount = "-1";
+			ArrayList<Member> members = new ArrayList<Member>();
+			try (Scanner chartReader = new Scanner(selectedFile)) {
+				if (chartReader.hasNextLine()) {
+					String data = chartReader.nextLine();
+					int commaIndex1 = data.indexOf(',');
+					int commaIndex2 = data.substring(commaIndex1 + 1).indexOf(",") + commaIndex1 + 1;
+					rows = data.substring(0, commaIndex1);
+					totalSeats = data.substring(commaIndex1 + 1, commaIndex2);
+					typesCount = data.substring(commaIndex2 + 1);
+				}
+				String types = "";
+				for (int i = 0; i < Integer.parseInt(typesCount); ++i) {
+					types += chartReader.nextLine() + "\n";
+				}
+				while (chartReader.hasNextLine()) {
+					String data = chartReader.nextLine();
+					int commaIndex1 = data.indexOf(",");
+					int commaIndex2 = data.substring(commaIndex1 + 1).indexOf(",") + commaIndex1 + 1;
+					int commaIndex3 = data.substring(commaIndex2 + 1).indexOf(",") + commaIndex2 + 1;
+					String firstName = data.substring(0, commaIndex1);
+					String lastName = data.substring(commaIndex1 + 1, commaIndex2);
+					String type = data.substring(commaIndex2 + 1, commaIndex3);
+					String coords = data.substring(commaIndex3 + 1);
+					Member newMember = new Member(firstName, lastName, type, coords);
+					members.add(newMember);
+				}
+				Chart chart = new Chart(rows, totalSeats, members, selectedFile, types);
+				ChartEditor.editChart(stage, chart);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			edited = false;
+		}
+	}
+	
+	// Source - https://stackoverflow.com/a/24232749
+	// Posted by Pshemo, modified by community. See post 'Timeline' for change history
+	// Retrieved 2026-05-28, License - CC BY-SA 3.0
+
+	public static Optional<String> colorName(Color c) {
+	    for (Field f : Color.class.getDeclaredFields()) {
+	        //we want to test only fields of type Color
+	        if (f.getType().equals(Color.class))
+	            try {
+	                if (f.get(null).equals(c))
+	                    return Optional.of(f.getName().toLowerCase());
+	            } catch (IllegalArgumentException | IllegalAccessException e) {
+	                // shouldn't not be thrown, but just in case print its stacktrace
+	                e.printStackTrace();
+	            }
+	    }
+	    return Optional.empty();
+	}
+
 	
 }

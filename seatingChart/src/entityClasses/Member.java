@@ -1,5 +1,6 @@
 package entityClasses;
 
+import javafx.scene.paint.Color;
 import javafx.util.Pair;
 
 public class Member {
@@ -10,9 +11,11 @@ public class Member {
 	
 	*/
 	
-	private String name;
-	private String part;
+	private String firstName;
+	private String lastName;
+	private String type;
 	private Pair<Integer, Integer> coords;
+	private Color color = Color.WHITE;
 	
 	/*-*
 	
@@ -20,10 +23,20 @@ public class Member {
 	
 	*/
 	
-	public Member(String name, String part) {
-		this.name = name;
-		this.part = part;
+	public Member(String firstName, String lastName, String type) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.type = type;
 		this.coords = new Pair<>(-1, -1);
+	}
+	
+	public Member(String firstName, String lastName, String type, String coords) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.type = type;
+		Integer x = Integer.parseInt(coords.substring(0, coords.indexOf(",")));
+		Integer y = Integer.parseInt(coords.substring(coords.indexOf(",") + 1));
+		this.coords = new Pair<>(x, y);
 	}
 	
 	/*-*
@@ -32,12 +45,16 @@ public class Member {
 	
 	*/
 	
-	public void setName(String name) {
-		this.name = name;
+	public void setFirstName(String name) {
+		this.firstName = name;
 	}
 	
-	public void setPart(String part) {
-		this.part = part;
+	public void setLastName(String name) {
+		this.lastName = name;
+	}
+	
+	public void setPart(String type) {
+		this.type = type;
 	}
 	
 	public void setCoordinates(int x, int y) {
@@ -48,12 +65,24 @@ public class Member {
 		this.coords = coords;
 	}
 	
-	public String getName() {
-		return name;
+	public void setColor(Color color) {
+		this.color = color;
 	}
 	
-	public String getPart() {
-		return part;
+	public String getName() {
+		return firstName + " " + lastName;
+	}
+	
+	public String getFirstName() {
+		return firstName;
+	}
+	
+	public String getLastName() {
+		return lastName;
+	}
+	
+	public String getType() {
+		return type;
 	}
 	
 	public int getX() {
@@ -66,6 +95,10 @@ public class Member {
 	
 	public Pair<Integer, Integer> getCoordinates() {
 		return coords;
+	}
+	
+	public Color getColor() {
+		return color;
 	}
 	
 }

@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -24,12 +25,14 @@ public class NewChartView {
 	// GUI Elements
 	
 	private static Label title = new Label();
-	private static Button confirmButton = new Button();
+	private static Button confirmButton = new Button("Continue");
 	
 	private static Label promptRows = new Label();
 	private static Label promptTotalSeats = new Label();
 	private static Label promptMemberTypes = new Label();
 	private static Label promptMembers = new Label();
+	
+	private static CheckBox customTypes = new CheckBox("Custom Member Types");
 	
 	private static TextField inputRows = new TextField();
 	private static TextField inputTotalSeats = new TextField();
@@ -60,9 +63,6 @@ public class NewChartView {
 			newChartPage = new NewChartView();
 		}
 		
-		// Update dynamic elements
-		confirmButton.setText("Continue");
-		
 		// Display page
 		stage.setTitle("Create New Chart");
 		stage.setScene(createScene);
@@ -79,13 +79,43 @@ public class NewChartView {
 		
 		setupButtonUI(confirmButton, "Arial", 16, 200, Pos.CENTER, 575, 545);
 		confirmButton.setOnAction((_) -> {
-			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputMembers.getText().isEmpty() || inputMemberTypes.getText().isEmpty()) {
+			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputMembers.getText().isEmpty()
+					|| (inputMemberTypes.getText().isEmpty() && customTypes.isSelected())) {
 				emptyFieldAlert.showAndWait();
+			} else if (customTypes.isSelected()) {
+				try {
+					Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText(), inputMemberTypes.getText());
+					applicationMain.ChartEditor.editChart(stage, chart);
+				} catch (StringIndexOutOfBoundsException e) {
+					Alert formattingAlert = new Alert(Alert.AlertType.ERROR);
+					formattingAlert.setTitle("Error Reading Members");
+					formattingAlert.setHeaderText("An error has occurred trying to read the list of members.");
+					formattingAlert.setContentText("This most commonly occurs when there is some formatting mistake. Check your list and try again.");
+				}
 			} else {
-				Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText());
-				applicationMain.ChartEditor.editChart(stage, chart);
+				try {
+					Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText());
+					applicationMain.ChartEditor.editChart(stage, chart);
+				} catch (StringIndexOutOfBoundsException e) {
+					Alert formattingAlert = new Alert(Alert.AlertType.ERROR);
+					formattingAlert.setTitle("Error Reading Members");
+					formattingAlert.setHeaderText("An error has occurred trying to read the list of members.");
+					formattingAlert.setContentText("This most commonly occurs when there is some formatting mistake. Check your list and try again.");
+				}
 			}
 		});
+		
+		setupCheckBoxUI(customTypes, "Arial", 16, 200, Pos.CENTER, 25, 340);
+		customTypes.setSelected(false);
+		customTypes.setAllowIndeterminate(false);
+		customTypes.setOnAction((_) -> {
+			if (customTypes.isSelected()) {
+				rootPane.getChildren().addAll(promptMemberTypes, inputMemberTypes);
+			} else {
+				rootPane.getChildren().removeAll(promptMemberTypes, inputMemberTypes);
+			}
+		});
+		
 		promptRows.setText("Rows: ");
 		setupLabelUI(promptRows, "Arial", 16, 50, Pos.TOP_LEFT, 25, 100);
 		promptTotalSeats.setText("Total Seats:");
@@ -93,14 +123,14 @@ public class NewChartView {
 		promptMembers.setText("Members: ");
 		setupLabelUI(promptMembers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);
 		promptMemberTypes.setText("Member Types:");
-		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 340);		
+		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 380);		
 		
-		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 130, 95);	
-		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 130, 135);
-		inputMembers.setPromptText("Member Name, Part");
-		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 130, 175);	
+		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 140, 95);	
+		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);
+		inputMembers.setPromptText("First Name, Last Name, Part");
+		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 140, 175);	
 		inputMemberTypes.setPromptText("Part Name, Color");
-		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 150, 130, 335);	
+		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 375);	
 		
 		emptyFieldAlert.setTitle("Empty Field(s)");
 		emptyFieldAlert.setHeaderText("One or more fields have been read as empty.");
@@ -110,7 +140,7 @@ public class NewChartView {
 				promptRows, inputRows,
 				promptTotalSeats, inputTotalSeats,
 				promptMembers, inputMembers,
-				promptMemberTypes, inputMemberTypes);
+				customTypes);
 		
 	}
 	
@@ -199,6 +229,25 @@ public class NewChartView {
 		ta.setMaxHeight(h);
 		ta.setLayoutX(x);
 		ta.setLayoutY(y);		
+	}
+	
+	/**********
+	 * Private local method to initialize the standard fields for a check box
+	 * 
+	 * @param cb	The CheckBox object to be initialized
+	 * @param ff	The font to be used
+	 * @param f		The size of the font to be used
+	 * @param w		The width of the CheckBox
+	 * @param x		The location from the left edge (x axis)
+	 * @param y		The location from the top (y axis)
+	 */
+	private static void setupCheckBoxUI(CheckBox cb, String ff, double f, double w, Pos p, double x,
+			double y){
+		cb.setFont(Font.font(ff, f));
+		cb.setMinWidth(w);
+		cb.setAlignment(p);
+		cb.setLayoutX(x);
+		cb.setLayoutY(y);		
 	}
 	
 }
