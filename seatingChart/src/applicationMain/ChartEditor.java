@@ -1,5 +1,6 @@
 package applicationMain;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -16,6 +17,7 @@ import entityClasses.Member;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -38,6 +40,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
@@ -70,6 +73,9 @@ public class ChartEditor {
 	
 	// Chart to edit
 	private static Chart chart;
+	
+	// TEMP TESTING
+	private static Label cursorPosition = new Label();
 	
 	// GUI Elements
 	
@@ -127,6 +133,16 @@ public class ChartEditor {
 		}
 				
 		// Update dynamic elements
+		
+		cursorPosition.setFont(Font.font("Arial", 30));
+		cursorPosition.setMinWidth(100);
+		cursorPosition.setAlignment(Pos.CENTER);
+		rootPane.setOnMouseMoved(event -> {
+			cursorPosition.setText(event.getSceneX() + ", " + event.getSceneY());
+		});
+		rootPane.setOnMouseDragged(event -> {
+			cursorPosition.setText(event.getSceneX() + ", " + event.getSceneY());
+		});
 		
 		saveButton.setOnAction((_) -> {
 			if (chart.getSaveLocation() == null) {
@@ -228,11 +244,13 @@ public class ChartEditor {
 				while (resultReader.hasNextLine()) {
 					String data = resultReader.nextLine();
 					int commaIndex1 = data.indexOf(',');
-					int commaIndex2 = -1;
-					if (commaIndex1 > 0) commaIndex2 = data.substring(commaIndex1 + 1).indexOf(',') + commaIndex1 + 1;
+					int commaIndex2 = data.substring(commaIndex1 + 1).indexOf(',') + commaIndex1 + 1;
 					String firstName = data.substring(0, commaIndex1).strip();
+					System.out.println(firstName);
 					String lastName = data.substring(commaIndex1 + 1, commaIndex2).strip();
+					System.out.println(lastName);
 					String type = data.substring(commaIndex2 + 1).strip();
+					System.out.println(type);
 					Member readMember = new Member(firstName, lastName, type);
 					for (int i = 0; i < members.size(); ++i) {
 						Member current = members.get(i);
@@ -292,10 +310,9 @@ public class ChartEditor {
 		
 		exportButton.setOnAction((_) -> {
 			fileChooser.setTitle("Export Seating Chart");
-			fileChooser.getExtensionFilters().addAll(
-					new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png"),
-					new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg")
-			);
+			FileChooser.ExtensionFilter pngFilter = new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png");
+			FileChooser.ExtensionFilter jpgFilter = new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg");
+			fileChooser.getExtensionFilters().addAll(pngFilter, jpgFilter);
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
@@ -304,18 +321,22 @@ public class ChartEditor {
 					WritableImage screenshot = new WritableImage((int) chartScroll.getBoundsInLocal().getWidth(), (int) chartScroll.getBoundsInLocal().getHeight());
 					chartScroll.snapshot(new SnapshotParameters(), screenshot);
 					
-					String format = "jpg";
-					if (file.getName().toLowerCase().endsWith(".png")) format = "png";
+					if (file.getName().toLowerCase().endsWith(".png")) { 
+						ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), "png", file);
+					} else if (file.getName().toLowerCase().endsWith(".jpg")) {
+						BufferedImage bufferedScreenshot = SwingFXUtils.fromFXImage(screenshot, null);
+						
+						BufferedImage rgbScreenshot = new BufferedImage(bufferedScreenshot.getWidth(), bufferedScreenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
+						rgbScreenshot.createGraphics().drawImage(bufferedScreenshot, 0, 0, null);
+						
+						ImageIO.write(rgbScreenshot, "jpg", file);
+					}
 					
-					ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), format, file);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			fileChooser.getExtensionFilters().removeAll(
-					new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png"),
-					new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg")
-			);
+			fileChooser.getExtensionFilters().removeAll(pngFilter, jpgFilter);
 		});
 		
 		memberPane.setPrefHeight(screenHeight / 6);
@@ -331,7 +352,7 @@ public class ChartEditor {
 		chartScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 		
 		toolBar.getItems().addAll(newButton, saveButton, saveAsButton, loadButton, new Separator(),
-				editSeatsButton, editMembersButton, editTypesButton, new Separator(), exportButton);
+				editSeatsButton, editMembersButton, editTypesButton, new Separator(), exportButton, new Separator(), cursorPosition);
 		
 		rootPane.setTop(toolBar);
 		rootPane.setCenter(chartScroll);
@@ -436,23 +457,25 @@ public class ChartEditor {
 				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
 				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
-				Text name = new Text(current.getName());
+				Text name = new Text(current.getName() + ", " + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
+					System.out.println(event.getSceneX() + ", " + event.getSceneY());
+					System.out.println((event.getSceneX() - seatWidth - 2) + ", " + (event.getSceneY() - seatHeight - 2));
 					memberPane.getChildren().remove(completedRectangle);
 					selectedMember = new Pair<>(completedRectangle, current);
-					completedRectangle.setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
-					completedRectangle.setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
+					completedRectangle.setLayoutY(event.getSceneY() - 1.0000001*seatHeight - 2);
 					completedRectangle.setCursor(Cursor.MOVE);
 					rootPane.getChildren().add(completedRectangle);
 				});
 				completedRectangle.setOnMouseDragged(event -> {
 					if (selectedMember != null) {
-						selectedMember.getKey().setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
-						selectedMember.getKey().setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+						selectedMember.getKey().setLayoutX(event.getSceneX() - seatWidth - 2);
+						selectedMember.getKey().setLayoutY(event.getSceneY() - 1.0000001*seatHeight - 2);
 					}
 				});
 				completedRectangle.setOnMouseReleased((_) -> {
@@ -469,7 +492,7 @@ public class ChartEditor {
 				Rectangle newMember = new Rectangle(seatX + (seatWidth+10)*current.getX(), seatBaseY - (seatHeight+10)*current.getY(), seatWidth, seatHeight);
 				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
-				Text name = new Text(current.getName());
+				Text name = new Text(current.getName() + ", " + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();
@@ -477,16 +500,18 @@ public class ChartEditor {
 				completedRectangle.setLayoutY(seatBaseY - (seatHeight+10)*current.getY());
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
+					System.out.println(event.getSceneX() + ", " + event.getSceneY());
+					System.out.println((event.getSceneX() - seatWidth - 2) + ", " + (event.getSceneY() - seatHeight - 2));
 					memberPane.getChildren().remove(completedRectangle);
 					selectedMember = new Pair<>(completedRectangle, current);
-					completedRectangle.setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
-					completedRectangle.setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
+					completedRectangle.setLayoutY(event.getSceneY() - seatHeight - 2);
 					completedRectangle.setCursor(Cursor.MOVE);
 					rootPane.getChildren().add(completedRectangle);
 				});
 				completedRectangle.setOnMouseDragged(event -> {
-					completedRectangle.setLayoutX(event.getSceneX() - 1.1*seatWidth - 1);
-					completedRectangle.setLayoutY(event.getSceneY() - 1.5*seatHeight - 1);
+					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
+					completedRectangle.setLayoutY(event.getSceneY() - seatHeight - 2);
 				});
 				completedRectangle.setOnMouseReleased((_) -> {
 					rootPane.getChildren().remove(completedRectangle);

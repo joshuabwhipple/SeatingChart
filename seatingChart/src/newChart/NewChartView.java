@@ -26,6 +26,7 @@ public class NewChartView {
 	
 	private static Label title = new Label();
 	private static Button confirmButton = new Button("Continue");
+	private static Button backButton = new Button("Back");
 	
 	private static Label promptRows = new Label();
 	private static Label promptTotalSeats = new Label();
@@ -105,6 +106,11 @@ public class NewChartView {
 			}
 		});
 		
+		setupButtonUI(backButton, "Arial", 16, 200, Pos.CENTER, 25, 545);
+		backButton.setOnAction((_) -> {
+			applicationStart.Main.display(stage);
+		});
+		
 		setupCheckBoxUI(customTypes, "Arial", 16, 200, Pos.CENTER, 25, 340);
 		customTypes.setSelected(false);
 		customTypes.setAllowIndeterminate(false);
@@ -129,18 +135,35 @@ public class NewChartView {
 		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);
 		inputMembers.setPromptText("First Name, Last Name, Part");
 		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 140, 175);	
+		
 		inputMemberTypes.setPromptText("Part Name, Color");
 		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 375);	
+		inputMemberTypes.setText(
+				"Soprano, Light Cyan\n" +  
+				"Soprano 1, Light Cyan\n" +  
+				"Soprano 2, Light Sky Blue\n" +  
+				"Alto, Light Sea Green\n" +  
+				"Alto 1, Light Sea Green\n" +  
+				"Alto 2, Light Green\n" +  
+				"Tenor, Light Coral\n" +  
+				"Tenor 1, Light Coral\n" +  
+				"Tenor 2, Light Salmon\n" +  
+				"Bass, Light Steel Blue\n" +  
+				"Bass 1, Light Steel Blue\n" +  
+				"Bass 2, Steel Blue\n" +  
+				"Part 1, Light Cyan\n" +  
+				"Part 2, Light Sea Green\n" 
+);
 		
 		emptyFieldAlert.setTitle("Empty Field(s)");
 		emptyFieldAlert.setHeaderText("One or more fields have been read as empty.");
 		emptyFieldAlert.setContentText("Please fill them in and then continue.");
 		
 		rootPane.getChildren().addAll(title, confirmButton,
-				promptRows, inputRows,
-				promptTotalSeats, inputTotalSeats,
-				promptMembers, inputMembers,
-				customTypes);
+				backButton, promptRows,
+				inputRows, promptTotalSeats,
+				inputTotalSeats, promptMembers,
+				inputMembers, customTypes);
 		
 	}
 	

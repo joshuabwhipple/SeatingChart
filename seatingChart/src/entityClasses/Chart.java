@@ -117,8 +117,8 @@ public class Chart {
 			int commaIndex2 = data.substring(commaIndex1 + 1).indexOf(',') + commaIndex1 + 1;
 			String firstName = data.substring(0, commaIndex1).strip();
 			String lastName = data.substring(commaIndex1 + 1, commaIndex2).strip();
-			String part = data.substring(commaIndex2 + 1).strip();
-			Member readMember = new Member(firstName, lastName, part);
+			String type = data.substring(commaIndex2 + 1).strip();
+			Member readMember = new Member(firstName, lastName, type);
 			members.add(readMember);
 		}
 		memberReader.close();
@@ -134,7 +134,7 @@ public class Chart {
 				String typeName = data.substring(0, commaIndex).strip();
 				Color typeColor = Color.WHITE;
 				try {
-					typeColor = Color.web(data.substring(commaIndex+1).strip());
+					typeColor = Color.web(data.substring(commaIndex+1).replaceAll("\\s", "").toLowerCase());
 				} catch (IllegalArgumentException e) {
 					Alert unknownColor = new Alert(Alert.AlertType.ERROR);
 					unknownColor.setTitle("Unknown Color");
@@ -148,8 +148,8 @@ public class Chart {
 			typeReader.close();
 		} else {
 			types = new ArrayList<>();
-			types.add(new Pair<>("Soprano", Color.LIGHTBLUE));
-			types.add(new Pair<>("Soprano 1", Color.LIGHTBLUE));
+			types.add(new Pair<>("Soprano", Color.LIGHTCYAN));
+			types.add(new Pair<>("Soprano 1", Color.LIGHTCYAN));
 			types.add(new Pair<>("Soprano 2", Color.LIGHTSKYBLUE));
 			types.add(new Pair<>("Alto", Color.LIGHTSEAGREEN));
 			types.add(new Pair<>("Alto 1", Color.LIGHTSEAGREEN));
@@ -157,10 +157,11 @@ public class Chart {
 			types.add(new Pair<>("Tenor", Color.LIGHTCORAL));
 			types.add(new Pair<>("Tenor 1", Color.LIGHTCORAL));
 			types.add(new Pair<>("Tenor 2", Color.LIGHTSALMON));
-			types.add(new Pair<>("Baritone", Color.LIGHTGRAY));
 			types.add(new Pair<>("Bass", Color.LIGHTSTEELBLUE));
 			types.add(new Pair<>("Bass 1", Color.LIGHTSTEELBLUE));
 			types.add(new Pair<>("Bass 2", Color.STEELBLUE));
+			types.add(new Pair<>("Part 1", Color.LIGHTSKYBLUE));
+			types.add(new Pair<>("Part 2", Color.LIGHTSEAGREEN));
 		}
 	}
 	

@@ -36,18 +36,23 @@ public class Main extends Application {
 	private static FileChooser fileChooser = new FileChooser();
 	private static final String S = System.getProperty("file.separator");
 	
+	private static Pane root;
+	private static Scene scene;
+	
 	@Override
 	public void start(Stage stage) {
 		try {
-			Pane root = new Pane();
-			Scene scene = new Scene(root,800,600);
+			root = new Pane();
+			scene = new Scene(root,800,600);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			
 			title.setText("Seating Chart Maker");
 			setupLabelUI(title, "Arial", 32, 400, Pos.CENTER, 200, 25);
 			
 			setupButtonUI(newChart, "Arial", 16, 200, Pos.CENTER, 300, 250);
-			newChart.setOnAction((_) -> {NewChartView.createChart(stage);});
+			newChart.setOnAction((_) -> {
+				NewChartView.createChart(stage);
+			});
 			
 			fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+S+"Downloads"));
 			
@@ -93,13 +98,19 @@ public class Main extends Application {
 			});
 			
 			root.getChildren().addAll(title, newChart, openChart);
+			display(stage);
 			
-			stage.setScene(scene);
-			stage.setTitle("Seating Chart Maker");
-			stage.show();
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void display(Stage inStage) {
+		
+		inStage.setScene(scene);
+		inStage.setTitle("Seating Chart Maker");
+		inStage.show();
 	}
 	
 	public static void main(String[] args) {
