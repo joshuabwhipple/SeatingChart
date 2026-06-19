@@ -151,13 +151,13 @@ public class ChartEditor {
 				save();
 			}
 			if (stage.getTitle().indexOf("*") != -1) {
-				stage.setTitle(stage.getTitle().substring(0, stage.getTitle().length()-1));
+				stage.setTitle("Seating Chart Editor");
 			}
 		});
 		saveAsButton.setOnAction((_) -> {
 			saveAs();
 			if (stage.getTitle().indexOf("*") != -1) {
-				stage.setTitle(stage.getTitle().substring(0, stage.getTitle().length()-1));
+				stage.setTitle("Seating Chart Editor");
 			}
 		});
 		loadButton.setOnAction((_) -> {
@@ -316,9 +316,17 @@ public class ChartEditor {
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
+			int screenshotWidth;
+			if (chart.getRows() == 1) {
+				screenshotWidth = Math.min((int) chartScroll.getBoundsInLocal().getWidth(), 90*chart.getSeatsPerRow() + 40);
+			} else {
+				screenshotWidth = Math.min((int) chartScroll.getBoundsInLocal().getWidth(), 90*(chart.getSeatsPerRow() + 1) + 40);
+			}
+			int screenshotHeight = Math.min((int) chartScroll.getBoundsInLocal().getHeight(), 110*chart.getRows() + 40);
+			
 			if (file != null) {
 				try {
-					WritableImage screenshot = new WritableImage((int) chartScroll.getBoundsInLocal().getWidth(), (int) chartScroll.getBoundsInLocal().getHeight());
+					WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
 					chartScroll.snapshot(new SnapshotParameters(), screenshot);
 					
 					if (file.getName().toLowerCase().endsWith(".png")) { 
@@ -409,15 +417,15 @@ public class ChartEditor {
 		int seatsPerRow = chart.getSeatsPerRow();
 		
 		double seatBaseX = screenWidth / 2 - seatWidth / 2 - (seatsPerRow - 1) * (seatWidth / 2);
-		double seatBaseY = screenHeight / 3 - seatHeight / 2 + (rows - 1) * seatHeight;
+		double seatBaseY = screenHeight / 2 - seatHeight / 2 - (rows - 1) * seatHeight;
 		
 		// Base Chart
 		for (int i = 0; i < rows; ++i) {
-			double seatX = seatBaseX - ((i) % 2) * ((seatWidth+10)/2);
+			double seatX = seatBaseX - ((i+1) % 2) * ((seatWidth+10)/2);
 			int y = i;
-			for (int j = 0; j < seatsPerRow + i % 2; ++j) {
+			for (int j = 0; j < seatsPerRow + (i+1) % 2; ++j) {
 				int x = j;
-				Rectangle newSeat = new Rectangle(seatX + (seatWidth+10)*j, seatBaseY - (seatHeight+10)*i, seatWidth, seatHeight);
+				Rectangle newSeat = new Rectangle(seatX + (seatWidth+10)*j, seatBaseY + (seatHeight+10)*i, seatWidth, seatHeight);
 				newSeat.setFill(Color.LIGHTBLUE);
 				newSeat.setStroke(Color.BLACK);
 				newSeat.setOnMouseDragEntered((_) -> {
@@ -437,7 +445,7 @@ public class ChartEditor {
 						}
 						selectedMember.getValue().setCoordinates(x, y);
 						selectedMember.getKey().setLayoutX(seatX + (seatWidth+10)*x);
-						selectedMember.getKey().setLayoutY(seatBaseY - (seatHeight+10)*y);
+						selectedMember.getKey().setLayoutY(seatBaseY + (seatHeight+10)*y);
 						rootPane.getChildren().remove(selectedMember.getKey());
 						chartPane.getChildren().add(selectedMember.getKey());
 						selectedMember = null;
@@ -468,14 +476,14 @@ public class ChartEditor {
 					memberPane.getChildren().remove(completedRectangle);
 					selectedMember = new Pair<>(completedRectangle, current);
 					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
-					completedRectangle.setLayoutY(event.getSceneY() - 1.0000001*seatHeight - 2);
+					completedRectangle.setLayoutY(event.getSceneY() - seatHeight - 2);
 					completedRectangle.setCursor(Cursor.MOVE);
 					rootPane.getChildren().add(completedRectangle);
 				});
 				completedRectangle.setOnMouseDragged(event -> {
 					if (selectedMember != null) {
 						selectedMember.getKey().setLayoutX(event.getSceneX() - seatWidth - 2);
-						selectedMember.getKey().setLayoutY(event.getSceneY() - 1.0000001*seatHeight - 2);
+						selectedMember.getKey().setLayoutY(event.getSceneY() - seatHeight - 2);
 					}
 				});
 				completedRectangle.setOnMouseReleased((_) -> {
@@ -488,8 +496,8 @@ public class ChartEditor {
 				memberPane.getChildren().add(completedRectangle);
 				memberSeats.add(completedRectangle);
 			} else {
-				double seatX = seatBaseX - ((current.getY()) % 2) * ((seatWidth+10)/2);
-				Rectangle newMember = new Rectangle(seatX + (seatWidth+10)*current.getX(), seatBaseY - (seatHeight+10)*current.getY(), seatWidth, seatHeight);
+				double seatX = seatBaseX - ((current.getY()+1) % 2) * ((seatWidth+10)/2);
+				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
 				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
 				Text name = new Text(current.getName() + ", " + current.getType());
@@ -497,7 +505,7 @@ public class ChartEditor {
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();
 				completedRectangle.setLayoutX(seatX + (seatWidth+10)*current.getX());
-				completedRectangle.setLayoutY(seatBaseY - (seatHeight+10)*current.getY());
+				completedRectangle.setLayoutY(seatBaseY + (seatHeight+10)*current.getY());
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
 					System.out.println(event.getSceneX() + ", " + event.getSceneY());
