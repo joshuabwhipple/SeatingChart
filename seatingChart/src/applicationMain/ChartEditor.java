@@ -18,6 +18,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
@@ -61,6 +62,9 @@ public class ChartEditor {
 	
 	private static double seatWidth = 80;
 	private static double seatHeight = 100;
+	
+	private static double seatBaseX;
+	private static double seatBaseY;
 	
 	private static double screenWidth = Screen.getPrimary().getVisualBounds().getWidth();
 	private static double screenHeight = Screen.getPrimary().getVisualBounds().getHeight() - 20; // To account for scroll bar
@@ -133,6 +137,9 @@ public class ChartEditor {
 		}
 				
 		// Update dynamic elements
+		
+		seatBaseX = screenWidth / 2 - seatWidth / 2 - (chart.getSeatsPerRow() - 1) * (seatWidth / 2);
+		seatBaseY = screenHeight / 2 - seatHeight / 2 - (chart.getRows() - 1) * seatHeight;
 		
 		cursorPosition.setFont(Font.font("Arial", 30));
 		cursorPosition.setMinWidth(100);
@@ -327,11 +334,16 @@ public class ChartEditor {
 			if (file != null) {
 				try {
 					WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
-					chartScroll.snapshot(new SnapshotParameters(), screenshot);
+					SnapshotParameters parameters = new SnapshotParameters();
+					int startX = (int) seatBaseX;
+					if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
+					parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
+					chartScroll.snapshot(parameters, screenshot);
 					
 					if (file.getName().toLowerCase().endsWith(".png")) { 
 						ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), "png", file);
 					} else if (file.getName().toLowerCase().endsWith(".jpg")) {
+						
 						BufferedImage bufferedScreenshot = SwingFXUtils.fromFXImage(screenshot, null);
 						
 						BufferedImage rgbScreenshot = new BufferedImage(bufferedScreenshot.getWidth(), bufferedScreenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -415,9 +427,6 @@ public class ChartEditor {
 		ArrayList<Member> readMembers = chart.getMembers();	
 		int rows = chart.getRows();
 		int seatsPerRow = chart.getSeatsPerRow();
-		
-		double seatBaseX = screenWidth / 2 - seatWidth / 2 - (seatsPerRow - 1) * (seatWidth / 2);
-		double seatBaseY = screenHeight / 2 - seatHeight / 2 - (rows - 1) * seatHeight;
 		
 		// Base Chart
 		for (int i = 0; i < rows; ++i) {
