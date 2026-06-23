@@ -9,9 +9,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
-
 import javax.imageio.ImageIO;
-
 import entityClasses.Chart;
 import entityClasses.Member;
 import javafx.application.Platform;
@@ -44,10 +42,18 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Pair;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 public class ChartEditor {
 
@@ -319,7 +325,8 @@ public class ChartEditor {
 			fileChooser.setTitle("Export Seating Chart");
 			FileChooser.ExtensionFilter pngFilter = new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png");
 			FileChooser.ExtensionFilter jpgFilter = new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg");
-			fileChooser.getExtensionFilters().addAll(pngFilter, jpgFilter);
+			FileChooser.ExtensionFilter pdfFilter = new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf");
+			fileChooser.getExtensionFilters().addAll(pngFilter, jpgFilter, pdfFilter);
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
@@ -333,30 +340,60 @@ public class ChartEditor {
 			
 			if (file != null) {
 				try {
-					WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
-					SnapshotParameters parameters = new SnapshotParameters();
-					int startX = (int) seatBaseX;
-					if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
-					parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
-					chartScroll.snapshot(parameters, screenshot);
-					
-					if (file.getName().toLowerCase().endsWith(".png")) { 
-						ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), "png", file);
-					} else if (file.getName().toLowerCase().endsWith(".jpg")) {
+					if (file.getName().toLowerCase().endsWith(".pdf")) {
+						SnapshotParameters parameters = new SnapshotParameters();
+						int startX = (int) seatBaseX;
+						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
+						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
+						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
+						chartScroll.snapshot(parameters, screenshot);
 						
 						BufferedImage bufferedScreenshot = SwingFXUtils.fromFXImage(screenshot, null);
 						
-						BufferedImage rgbScreenshot = new BufferedImage(bufferedScreenshot.getWidth(), bufferedScreenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
-						rgbScreenshot.createGraphics().drawImage(bufferedScreenshot, 0, 0, null);
+						double scale = Math.min(792.0 / screenshotWidth, 612.0 / screenshotHeight);
 						
-						ImageIO.write(rgbScreenshot, "jpg", file);
+						double docX = (792.0 - screenshotWidth * scale) / 2.0;
+						double docY = (612.0 - screenshotHeight * scale) / 2.0;
+						
+						try (PDDocument document = new PDDocument()) {
+							PDPage page = new PDPage(new PDRectangle(792, 612));
+							document.addPage(page);
+							
+							PDImageXObject pdScreenshot = LosslessFactory.createFromImage(document, bufferedScreenshot);
+							
+							try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+								contentStream.drawImage(pdScreenshot, (float) docX, (float) docY, (float) (screenshotWidth * scale), (float) (screenshotHeight * scale));
+							}
+							document.save(file);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					} else {
+						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
+						SnapshotParameters parameters = new SnapshotParameters();
+						int startX = (int) seatBaseX;
+						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
+						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
+						chartScroll.snapshot(parameters, screenshot);
+						
+						if (file.getName().toLowerCase().endsWith(".png")) { 
+							ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), "png", file);
+						} else if (file.getName().toLowerCase().endsWith(".jpg")) {
+							
+							BufferedImage bufferedScreenshot = SwingFXUtils.fromFXImage(screenshot, null);
+							
+							BufferedImage rgbScreenshot = new BufferedImage(bufferedScreenshot.getWidth(), bufferedScreenshot.getHeight(), BufferedImage.TYPE_INT_RGB);
+							rgbScreenshot.createGraphics().drawImage(bufferedScreenshot, 0, 0, null);
+							
+							ImageIO.write(rgbScreenshot, "jpg", file);
+						} 
 					}
 					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			fileChooser.getExtensionFilters().removeAll(pngFilter, jpgFilter);
+			fileChooser.getExtensionFilters().removeAll(pngFilter, jpgFilter, pdfFilter);
 		});
 		
 		memberPane.setPrefHeight(screenHeight / 6);
