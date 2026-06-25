@@ -18,6 +18,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
@@ -42,7 +43,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.transform.Rotate;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -164,13 +164,13 @@ public class ChartEditor {
 				save();
 			}
 			if (stage.getTitle().indexOf("*") != -1) {
-				stage.setTitle("Seating Chart Editor");
+				stage.setTitle("Seating Chart Editor - " + chart.getName());
 			}
 		});
 		saveAsButton.setOnAction((_) -> {
 			saveAs();
 			if (stage.getTitle().indexOf("*") != -1) {
-				stage.setTitle("Seating Chart Editor");
+				stage.setTitle("Seating Chart Editor - " + chart.getName());
 			}
 		});
 		loadButton.setOnAction((_) -> {
@@ -332,11 +332,13 @@ public class ChartEditor {
 			
 			int screenshotWidth;
 			if (chart.getRows() == 1) {
-				screenshotWidth = Math.min((int) chartScroll.getBoundsInLocal().getWidth(), 90*chart.getSeatsPerRow() + 40);
+				screenshotWidth = 90*chart.getSeatsPerRow() + 40;
 			} else {
-				screenshotWidth = Math.min((int) chartScroll.getBoundsInLocal().getWidth(), 90*(chart.getSeatsPerRow() + 1) + 40);
+				screenshotWidth = 90*(chart.getSeatsPerRow() + 1) + 40;
 			}
-			int screenshotHeight = Math.min((int) chartScroll.getBoundsInLocal().getHeight(), 110*chart.getRows() + 40);
+			int screenshotHeight = 110*chart.getRows() + 40;
+			
+			Node content = chartScroll.getContent();
 			
 			if (file != null) {
 				try {
@@ -346,7 +348,7 @@ public class ChartEditor {
 						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
 						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
 						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
-						chartScroll.snapshot(parameters, screenshot);
+						content.snapshot(parameters, screenshot);
 						
 						BufferedImage bufferedScreenshot = SwingFXUtils.fromFXImage(screenshot, null);
 						
@@ -374,7 +376,7 @@ public class ChartEditor {
 						int startX = (int) seatBaseX;
 						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
 						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
-						chartScroll.snapshot(parameters, screenshot);
+						content.snapshot(parameters, screenshot);
 						
 						if (file.getName().toLowerCase().endsWith(".png")) { 
 							ImageIO.write(SwingFXUtils.fromFXImage(screenshot, null), "png", file);
@@ -431,7 +433,7 @@ public class ChartEditor {
 		
 		// Display page
 		stage.setMaximized(true);
-		stage.setTitle("Seating Chart Editor");
+		stage.setTitle("Seating Chart Editor - " + chart.getName());
 		stage.setScene(editScene);
 		stage.show();
 	}
@@ -592,6 +594,7 @@ public class ChartEditor {
 			chart.getSaveLocation().createNewFile();
 			ArrayList<Pair<String, Color>> types = chart.getTypes();
 			writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
+			writer.write(chart.getName());
 			for (int i = 0; i < types.size(); ++i) {
 				writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
 			}
@@ -616,6 +619,7 @@ public class ChartEditor {
 				selectedFile.createNewFile();
 				ArrayList<Pair<String, Color>> types = chart.getTypes();
 				writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
+				writer.write(chart.getName());
 				for (int i = 0; i < types.size(); ++i) {
 					writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
 				}
@@ -650,6 +654,7 @@ public class ChartEditor {
 					totalSeats = data.substring(commaIndex1 + 1, commaIndex2);
 					typesCount = data.substring(commaIndex2 + 1);
 				}
+				String name = chartReader.nextLine();
 				String types = "";
 				for (int i = 0; i < Integer.parseInt(typesCount); ++i) {
 					types += chartReader.nextLine() + "\n";
@@ -667,6 +672,7 @@ public class ChartEditor {
 					members.add(newMember);
 				}
 				Chart chart = new Chart(rows, totalSeats, members, selectedFile, types);
+				chart.setName(name);
 				ChartEditor.editChart(stage, chart);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();

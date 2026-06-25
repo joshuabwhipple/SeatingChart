@@ -16,6 +16,7 @@ public class Chart {
 	
 	*/
 	
+	private String name;
 	private int rows;
 	private int seatsPerRow;
 	private int totalSeats;
@@ -122,7 +123,6 @@ public class Chart {
 			members.add(readMember);
 		}
 		memberReader.close();
-		
 	}
 	
 	private void readTypes(String typesList) {
@@ -177,6 +177,10 @@ public class Chart {
 		}
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	public void setRows(String rows) {
 		this.rows = Integer.parseInt(rows);
 		this.seatsPerRow = Math.ceilDiv(this.totalSeats, this.rows);
@@ -216,6 +220,10 @@ public class Chart {
 		customTypes = true;
 		readTypes(typesList);
 		setColors();
+	}
+	
+	public String getName() {
+		return this.name;
 	}
 	
 	public int getRows() {

@@ -28,6 +28,7 @@ public class NewChartView {
 	private static Button confirmButton = new Button("Continue");
 	private static Button backButton = new Button("Back");
 	
+	private static Label promptName = new Label();
 	private static Label promptRows = new Label();
 	private static Label promptTotalSeats = new Label();
 	private static Label promptMemberTypes = new Label();
@@ -35,6 +36,7 @@ public class NewChartView {
 	
 	private static CheckBox customTypes = new CheckBox("Custom Member Types");
 	
+	private static TextField inputName = new TextField();
 	private static TextField inputRows = new TextField();
 	private static TextField inputTotalSeats = new TextField();
 	private static TextArea inputMemberTypes = new TextArea();
@@ -81,11 +83,12 @@ public class NewChartView {
 		setupButtonUI(confirmButton, "Arial", 16, 200, Pos.CENTER, 575, 545);
 		confirmButton.setOnAction((_) -> {
 			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputMembers.getText().isEmpty()
-					|| (inputMemberTypes.getText().isEmpty() && customTypes.isSelected())) {
+					|| (inputMemberTypes.getText().isEmpty() && customTypes.isSelected()) || inputName.getText().isEmpty()) {
 				emptyFieldAlert.showAndWait();
 			} else if (customTypes.isSelected()) {
 				try {
 					Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText(), inputMemberTypes.getText());
+					chart.setName(inputName.getText());
 					applicationMain.ChartEditor.editChart(stage, chart);
 				} catch (StringIndexOutOfBoundsException e) {
 					Alert formattingAlert = new Alert(Alert.AlertType.ERROR);
@@ -96,6 +99,7 @@ public class NewChartView {
 			} else {
 				try {
 					Chart chart = new Chart(inputRows.getText(), inputTotalSeats.getText(), inputMembers.getText());
+					chart.setName(inputName.getText());
 					applicationMain.ChartEditor.editChart(stage, chart);
 				} catch (StringIndexOutOfBoundsException e) {
 					Alert formattingAlert = new Alert(Alert.AlertType.ERROR);
@@ -122,22 +126,26 @@ public class NewChartView {
 			}
 		});
 		
+		promptName.setText("Name: ");
+		setupLabelUI(promptName, "Arial", 16, 50, Pos.TOP_LEFT, 25, 100);
 		promptRows.setText("Rows: ");
-		setupLabelUI(promptRows, "Arial", 16, 50, Pos.TOP_LEFT, 25, 100);
+		setupLabelUI(promptRows, "Arial", 16, 50, Pos.TOP_LEFT, 25, 140);
 		promptTotalSeats.setText("Total Seats:");
-		setupLabelUI(promptTotalSeats, "Arial", 16, 50, Pos.TOP_LEFT, 25, 140);		
+		setupLabelUI(promptTotalSeats, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);		
 		promptMembers.setText("Members: ");
-		setupLabelUI(promptMembers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);
+		setupLabelUI(promptMembers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 220);
 		promptMemberTypes.setText("Member Types:");
-		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 380);		
+		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 420);		
 		
-		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 140, 95);	
-		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);
+		setupTextFieldUI(inputName, "Arial", 16, 75, Pos.TOP_LEFT, 140, 95);
+		inputName.setMinWidth(300);
+		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);	
+		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 175);
 		inputMembers.setPromptText("First Name, Last Name, Part");
-		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 140, 175);	
+		setupTextAreaUI(inputMembers, "Arial", 16, 600, 110, 140, 215);	
 		
 		inputMemberTypes.setPromptText("Part Name, Color");
-		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 375);	
+		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 415);	
 		inputMemberTypes.setText(
 				"Soprano, Light Cyan\n" +  
 				"Soprano 1, Light Cyan\n" +  
@@ -160,7 +168,8 @@ public class NewChartView {
 		emptyFieldAlert.setContentText("Please fill them in and then continue.");
 		
 		rootPane.getChildren().addAll(title, confirmButton,
-				backButton, promptRows,
+				backButton, promptName, 
+				inputName, promptRows,
 				inputRows, promptTotalSeats,
 				inputTotalSeats, promptMembers,
 				inputMembers, customTypes);
