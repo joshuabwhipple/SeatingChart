@@ -64,7 +64,6 @@ public class ChartEditor {
 	*/
 	
 	private static FileChooser fileChooser;
-	private static final String S = System.getProperty("file.separator");
 	
 	private static double seatWidth = 80;
 	private static double seatHeight = 100;
@@ -98,6 +97,9 @@ public class ChartEditor {
 	private static Button editMembersButton = new Button("Edit Members");
 	private static Button editTypesButton = new Button("Edit Types");
 	private static Button exportButton = new Button("Export");
+	
+	// Placed above the exported files
+	private static Label chartName = new Label();
 	
 	private static Dialog<Pair<String, String>> editSeatsDialog = new Dialog<>();
 	private static Dialog<String> editMembersDialog = new Dialog<>();
@@ -144,8 +146,10 @@ public class ChartEditor {
 				
 		// Update dynamic elements
 		
-		seatBaseX = screenWidth / 2 - seatWidth / 2 - (chart.getSeatsPerRow() - 1) * (seatWidth / 2);
-		seatBaseY = screenHeight / 2 - seatHeight / 2 - (chart.getRows() - 1) * seatHeight;
+		seatBaseX = Math.max(65, screenWidth / 2 - seatWidth / 2 - (chart.getSeatsPerRow() - 1) * (seatWidth + 10) / 2);
+		seatBaseY = Math.max(20, 2 * screenHeight / 5 - seatHeight / 2 - (chart.getRows() - 1) * (seatHeight + 10) / 2);
+		
+		chartName.setText(chart.getName());
 		
 		cursorPosition.setFont(Font.font("Arial", 30));
 		cursorPosition.setMinWidth(100);
@@ -330,13 +334,23 @@ public class ChartEditor {
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
+			//Calculate name text's dimensions
+			Text helper = new Text(chartName.getText());
+			helper.setFont(chartName.getFont());
+			double nameWidth = helper.getLayoutBounds().getWidth();
+			double nameHeight = helper.getLayoutBounds().getHeight();
+			
 			int screenshotWidth;
 			if (chart.getRows() == 1) {
 				screenshotWidth = 90*chart.getSeatsPerRow() + 40;
 			} else {
 				screenshotWidth = 90*(chart.getSeatsPerRow() + 1) + 40;
 			}
-			int screenshotHeight = 110*chart.getRows() + 40;
+			int screenshotHeight = 110*chart.getRows() + 40 + (int) nameHeight;
+			
+			chartName.setLayoutX(screenshotWidth / 2 - nameWidth / 2);
+			chartName.setLayoutY(seatBaseY - 10 - nameHeight);
+			chartPane.getChildren().add(chartName);
 			
 			Node content = chartScroll.getContent();
 			
@@ -346,7 +360,7 @@ public class ChartEditor {
 						SnapshotParameters parameters = new SnapshotParameters();
 						int startX = (int) seatBaseX;
 						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
-						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
+						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 30 - nameHeight, screenshotWidth, screenshotHeight));
 						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
 						content.snapshot(parameters, screenshot);
 						
@@ -375,7 +389,7 @@ public class ChartEditor {
 						SnapshotParameters parameters = new SnapshotParameters();
 						int startX = (int) seatBaseX;
 						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
-						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY + 20, screenshotWidth, screenshotHeight));
+						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 30 - nameHeight, screenshotWidth, screenshotHeight));
 						content.snapshot(parameters, screenshot);
 						
 						if (file.getName().toLowerCase().endsWith(".png")) { 
@@ -395,6 +409,7 @@ public class ChartEditor {
 					e.printStackTrace();
 				}
 			}
+			chartPane.getChildren().remove(chartName);
 			fileChooser.getExtensionFilters().removeAll(pngFilter, jpgFilter, pdfFilter);
 		});
 		
@@ -447,7 +462,10 @@ public class ChartEditor {
 		
 		
 		fileChooser = new FileChooser();
-		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+S+"Downloads"));
+		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		
+		chartName.setFont(Font.font("Arial", 50));
+		chartName.setAlignment(Pos.CENTER);
 		
 		newButton.setOnAction((_) -> {
 			if (edited) {
@@ -594,7 +612,7 @@ public class ChartEditor {
 			chart.getSaveLocation().createNewFile();
 			ArrayList<Pair<String, Color>> types = chart.getTypes();
 			writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
-			writer.write(chart.getName());
+			writer.write(chart.getName() + "\n");
 			for (int i = 0; i < types.size(); ++i) {
 				writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
 			}
@@ -612,14 +630,14 @@ public class ChartEditor {
 	
 	private static void saveAs() {
 		fileChooser.setTitle("Select Save File");
+		fileChooser.setInitialFileName(chart.getName() + ".txt");
 		File selectedFile = fileChooser.showSaveDialog(stage);
-		fileChooser.setInitialFileName("chart.txt");
 		if (selectedFile != null) {
 			try (FileWriter writer = new FileWriter(selectedFile.getAbsolutePath())) {
 				selectedFile.createNewFile();
 				ArrayList<Pair<String, Color>> types = chart.getTypes();
 				writer.write(chart.getRows() + "," + chart.getTotalSeats() + "," + types.size() + "\n");
-				writer.write(chart.getName());
+				writer.write(chart.getName() + "\n");
 				for (int i = 0; i < types.size(); ++i) {
 					writer.write(types.get(i).getKey() + "," + colorName(types.get(i).getValue()).get() + "\n");
 				}

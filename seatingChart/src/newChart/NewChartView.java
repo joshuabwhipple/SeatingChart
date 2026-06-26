@@ -115,7 +115,7 @@ public class NewChartView {
 			applicationStart.Main.display(stage);
 		});
 		
-		setupCheckBoxUI(customTypes, "Arial", 16, 200, Pos.CENTER, 25, 340);
+		setupCheckBoxUI(customTypes, "Arial", 16, 200, Pos.CENTER, 25, 380);
 		customTypes.setSelected(false);
 		customTypes.setAllowIndeterminate(false);
 		customTypes.setOnAction((_) -> {
@@ -142,7 +142,7 @@ public class NewChartView {
 		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);	
 		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 175);
 		inputMembers.setPromptText("First Name, Last Name, Part");
-		setupTextAreaUI(inputMembers, "Arial", 16, 600, 110, 140, 215);	
+		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 140, 215);	
 		
 		inputMemberTypes.setPromptText("Part Name, Color");
 		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 415);	
@@ -160,7 +160,7 @@ public class NewChartView {
 				"Bass 1, Light Steel Blue\n" +  
 				"Bass 2, Steel Blue\n" +  
 				"Part 1, Light Cyan\n" +  
-				"Part 2, Light Sea Green\n" 
+				"Part 2, Light Sea Green" 
 );
 		
 		emptyFieldAlert.setTitle("Empty Field(s)");

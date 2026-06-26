@@ -73,6 +73,7 @@ public class Main extends Application {
 							totalSeats = data.substring(commaIndex1 + 1, commaIndex2);
 							typesCount = data.substring(commaIndex2 + 1);
 						}
+						String name = chartReader.nextLine();
 						String types = "";
 						for (int i = 0; i < Integer.parseInt(typesCount); ++i) {
 							types += chartReader.nextLine() + "\n";
@@ -90,6 +91,7 @@ public class Main extends Application {
 							members.add(newMember);
 						}
 						Chart chart = new Chart(rows, totalSeats, members, selectedFile, types);
+						chart.setName(name);
 						ChartEditor.editChart(stage, chart);
 					} catch (FileNotFoundException e) {
 						e.printStackTrace();
