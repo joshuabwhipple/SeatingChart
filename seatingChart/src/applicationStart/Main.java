@@ -59,6 +59,8 @@ public class Main extends Application {
 			setupButtonUI(openChart, "Arial", 16, 200, Pos.CENTER, 300, 350);
 			openChart.setOnAction((_) -> {
 				fileChooser.setTitle("Select File To Load");
+				FileChooser.ExtensionFilter chartFilter = new FileChooser.ExtensionFilter("Chart Files (*.chrt)", "*.chrt");
+				fileChooser.getExtensionFilters().addAll(chartFilter);
 				File selectedFile = fileChooser.showOpenDialog(stage);
 				fileChooser.setInitialFileName("");
 				if (selectedFile != null) {
@@ -96,6 +98,7 @@ public class Main extends Application {
 					} catch (FileNotFoundException e) {
 						e.printStackTrace();
 					}
+					fileChooser.getExtensionFilters().removeAll(chartFilter);
 				}
 			});
 			

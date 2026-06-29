@@ -334,7 +334,7 @@ public class ChartEditor {
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
-			//Calculate name text's dimensions
+			// Calculate name text's dimensions
 			Text helper = new Text(chartName.getText());
 			helper.setFont(chartName.getFont());
 			double nameWidth = helper.getLayoutBounds().getWidth();
@@ -348,7 +348,10 @@ public class ChartEditor {
 			}
 			int screenshotHeight = 110*chart.getRows() + 40 + (int) nameHeight;
 			
-			chartName.setLayoutX(screenshotWidth / 2 - nameWidth / 2);
+			int startX = (int) seatBaseX;
+			if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
+
+			chartName.setLayoutX(startX - 20 + screenshotWidth / 2 - nameWidth / 2);
 			chartName.setLayoutY(seatBaseY - 10 - nameHeight);
 			chartPane.getChildren().add(chartName);
 			
@@ -358,8 +361,6 @@ public class ChartEditor {
 				try {
 					if (file.getName().toLowerCase().endsWith(".pdf")) {
 						SnapshotParameters parameters = new SnapshotParameters();
-						int startX = (int) seatBaseX;
-						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
 						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 30 - nameHeight, screenshotWidth, screenshotHeight));
 						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
 						content.snapshot(parameters, screenshot);
@@ -387,8 +388,6 @@ public class ChartEditor {
 					} else {
 						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
 						SnapshotParameters parameters = new SnapshotParameters();
-						int startX = (int) seatBaseX;
-						if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
 						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 30 - nameHeight, screenshotWidth, screenshotHeight));
 						content.snapshot(parameters, screenshot);
 						
@@ -630,7 +629,9 @@ public class ChartEditor {
 	
 	private static void saveAs() {
 		fileChooser.setTitle("Select Save File");
-		fileChooser.setInitialFileName(chart.getName() + ".txt");
+		fileChooser.setInitialFileName(chart.getName() + ".chrt");
+		FileChooser.ExtensionFilter chartFilter = new FileChooser.ExtensionFilter("Chart Files (*.chrt)", "*.chrt");
+		fileChooser.getExtensionFilters().addAll(chartFilter);
 		File selectedFile = fileChooser.showSaveDialog(stage);
 		if (selectedFile != null) {
 			try (FileWriter writer = new FileWriter(selectedFile.getAbsolutePath())) {
@@ -654,10 +655,13 @@ public class ChartEditor {
 			fileChooser.setInitialDirectory(selectedFile.getParentFile());
 		}
 		edited = false;
+		fileChooser.getExtensionFilters().removeAll(chartFilter);
 	}
 	
 	private static void load() {
 		fileChooser.setTitle("Select File To Load");
+		FileChooser.ExtensionFilter chartFilter = new FileChooser.ExtensionFilter("Chart Files (*.chrt)", "*.chrt");
+		fileChooser.getExtensionFilters().addAll(chartFilter);
 		File selectedFile = fileChooser.showOpenDialog(stage);
 		fileChooser.setInitialFileName("");
 		if (selectedFile != null) {
@@ -697,6 +701,7 @@ public class ChartEditor {
 			}
 			edited = false;
 		}
+		fileChooser.getExtensionFilters().removeAll(chartFilter);
 	}
 	
 	// Source - https://stackoverflow.com/a/24232749
