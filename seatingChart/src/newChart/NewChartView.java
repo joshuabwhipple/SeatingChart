@@ -78,9 +78,9 @@ public class NewChartView {
 		createScene = new Scene(rootPane, 800, 600);
 		
 		title.setText("New Chart");
-		setupLabelUI(title, "Arial", 32, 400, Pos.CENTER, 200, 25);
+		setupLabelUI(title, "Poppins", 32, 400, Pos.CENTER, 200, 25);
 		
-		setupButtonUI(confirmButton, "Arial", 16, 200, Pos.CENTER, 575, 545);
+		setupButtonUI(confirmButton, "Poppins", 16, 200, Pos.CENTER, 575, 545);
 		confirmButton.setOnAction((_) -> {
 			if (inputRows.getText().isEmpty() || inputTotalSeats.getText().isEmpty() || inputMembers.getText().isEmpty()
 					|| (inputMemberTypes.getText().isEmpty() && customTypes.isSelected()) || inputName.getText().isEmpty()) {
@@ -110,12 +110,12 @@ public class NewChartView {
 			}
 		});
 		
-		setupButtonUI(backButton, "Arial", 16, 200, Pos.CENTER, 25, 545);
+		setupButtonUI(backButton, "Poppins", 16, 200, Pos.CENTER, 25, 545);
 		backButton.setOnAction((_) -> {
 			applicationStart.Main.display(stage);
 		});
 		
-		setupCheckBoxUI(customTypes, "Arial", 16, 200, Pos.CENTER, 25, 380);
+		setupCheckBoxUI(customTypes, "Poppins", 16, 200, Pos.CENTER, 25, 380);
 		customTypes.setSelected(false);
 		customTypes.setAllowIndeterminate(false);
 		customTypes.setOnAction((_) -> {
@@ -127,25 +127,25 @@ public class NewChartView {
 		});
 		
 		promptName.setText("Name: ");
-		setupLabelUI(promptName, "Arial", 16, 50, Pos.TOP_LEFT, 25, 100);
+		setupLabelUI(promptName, "Poppins", 16, 50, Pos.TOP_LEFT, 25, 100);
 		promptRows.setText("Rows: ");
-		setupLabelUI(promptRows, "Arial", 16, 50, Pos.TOP_LEFT, 25, 140);
+		setupLabelUI(promptRows, "Poppins", 16, 50, Pos.TOP_LEFT, 25, 140);
 		promptTotalSeats.setText("Total Seats:");
-		setupLabelUI(promptTotalSeats, "Arial", 16, 50, Pos.TOP_LEFT, 25, 180);		
+		setupLabelUI(promptTotalSeats, "Poppins", 16, 50, Pos.TOP_LEFT, 25, 180);		
 		promptMembers.setText("Members: ");
-		setupLabelUI(promptMembers, "Arial", 16, 50, Pos.TOP_LEFT, 25, 220);
+		setupLabelUI(promptMembers, "Poppins", 16, 50, Pos.TOP_LEFT, 25, 220);
 		promptMemberTypes.setText("Member Types:");
-		setupLabelUI(promptMemberTypes, "Arial", 16, 50, Pos.TOP_LEFT, 25, 420);		
+		setupLabelUI(promptMemberTypes, "Poppins", 16, 50, Pos.TOP_LEFT, 25, 420);		
 		
-		setupTextFieldUI(inputName, "Arial", 16, 75, Pos.TOP_LEFT, 140, 95);
+		setupTextFieldUI(inputName, "Poppins", 16, 75, Pos.TOP_LEFT, 140, 95);
 		inputName.setMinWidth(300);
-		setupTextFieldUI(inputRows, "Arial", 16, 75, Pos.TOP_LEFT, 140, 135);	
-		setupTextFieldUI(inputTotalSeats, "Arial", 16, 75, Pos.TOP_LEFT, 140, 175);
+		setupTextFieldUI(inputRows, "Poppins", 16, 75, Pos.TOP_LEFT, 140, 135);	
+		setupTextFieldUI(inputTotalSeats, "Poppins", 16, 75, Pos.TOP_LEFT, 140, 175);
 		inputMembers.setPromptText("First Name, Last Name, Part");
-		setupTextAreaUI(inputMembers, "Arial", 16, 600, 150, 140, 215);	
+		setupTextAreaUI(inputMembers, "Poppins", 16, 600, 150, 140, 215);	
 		
 		inputMemberTypes.setPromptText("Part Name, Color");
-		setupTextAreaUI(inputMemberTypes, "Arial", 16, 600, 110, 140, 415);	
+		setupTextAreaUI(inputMemberTypes, "Poppins", 16, 600, 110, 140, 415);	
 		inputMemberTypes.setText(
 				"Soprano, Light Cyan\n" +  
 				"Soprano 1, Light Cyan\n" +  

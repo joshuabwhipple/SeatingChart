@@ -151,15 +151,23 @@ public class ChartEditor {
 		
 		chartName.setText(chart.getName());
 		
-		cursorPosition.setFont(Font.font("Arial", 30));
-		cursorPosition.setMinWidth(100);
-		cursorPosition.setAlignment(Pos.CENTER);
-		rootPane.setOnMouseMoved(event -> {
-			cursorPosition.setText(event.getSceneX() + ", " + event.getSceneY());
-		});
-		rootPane.setOnMouseDragged(event -> {
-			cursorPosition.setText(event.getSceneX() + ", " + event.getSceneY());
-		});
+		// Calculate text dimensions
+		Text helper = new Text(chartName.getText());
+		helper.setFont(chartName.getFont());
+		double nameWidth = helper.getLayoutBounds().getWidth();
+		double nameHeight = helper.getLayoutBounds().getHeight();
+		
+		int chartNameBaseX = (int) seatBaseX;
+		int chartWidth = 90*(chart.getSeatsPerRow()) + 40;
+		if (chart.getRows() > 1) {
+			chartNameBaseX -= (seatWidth+10)/2;
+			chartWidth = 90*(chart.getSeatsPerRow() + 1) + 40;
+		}
+		
+		chartName.setLayoutX(chartNameBaseX - 20 + chartWidth / 2 - nameWidth / 2);
+		chartName.setLayoutY(seatBaseY - 20 - nameHeight);
+		chartPane.getChildren().add(chartName);
+		
 		
 		saveButton.setOnAction((_) -> {
 			if (chart.getSaveLocation() == null) {
@@ -327,18 +335,13 @@ public class ChartEditor {
 		
 		exportButton.setOnAction((_) -> {
 			fileChooser.setTitle("Export Seating Chart");
+			fileChooser.setInitialFileName(chart.getName());
 			FileChooser.ExtensionFilter pngFilter = new FileChooser.ExtensionFilter("PNG Files (*.png)", "*.png");
 			FileChooser.ExtensionFilter jpgFilter = new FileChooser.ExtensionFilter("JPG Files (*.jpg)", "*.jpg");
 			FileChooser.ExtensionFilter pdfFilter = new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf");
 			fileChooser.getExtensionFilters().addAll(pngFilter, jpgFilter, pdfFilter);
 			
 			File file = fileChooser.showSaveDialog(stage);
-			
-			// Calculate name text's dimensions
-			Text helper = new Text(chartName.getText());
-			helper.setFont(chartName.getFont());
-			double nameWidth = helper.getLayoutBounds().getWidth();
-			double nameHeight = helper.getLayoutBounds().getHeight();
 			
 			int screenshotWidth;
 			if (chart.getRows() == 1) {
@@ -350,18 +353,14 @@ public class ChartEditor {
 			
 			int startX = (int) seatBaseX;
 			if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
-
-			chartName.setLayoutX(startX - 20 + screenshotWidth / 2 - nameWidth / 2);
-			chartName.setLayoutY(seatBaseY - 10 - nameHeight);
-			chartPane.getChildren().add(chartName);
-			
+					
 			Node content = chartScroll.getContent();
 			
 			if (file != null) {
 				try {
 					if (file.getName().toLowerCase().endsWith(".pdf")) {
 						SnapshotParameters parameters = new SnapshotParameters();
-						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 30 - nameHeight, screenshotWidth, screenshotHeight));
+						parameters.setViewport(new Rectangle2D(startX - 20, (int) seatBaseY - 40 - nameHeight, screenshotWidth, screenshotHeight));
 						WritableImage screenshot = new WritableImage(screenshotWidth, screenshotHeight);
 						content.snapshot(parameters, screenshot);
 						
@@ -408,7 +407,6 @@ public class ChartEditor {
 					e.printStackTrace();
 				}
 			}
-			chartPane.getChildren().remove(chartName);
 			fileChooser.getExtensionFilters().removeAll(pngFilter, jpgFilter, pdfFilter);
 		});
 		
@@ -463,7 +461,7 @@ public class ChartEditor {
 		fileChooser = new FileChooser();
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		
-		chartName.setFont(Font.font("Arial", 50));
+		chartName.setFont(Font.font("Poppins", 50));
 		chartName.setAlignment(Pos.CENTER);
 		
 		newButton.setOnAction((_) -> {

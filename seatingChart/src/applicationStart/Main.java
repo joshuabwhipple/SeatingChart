@@ -2,9 +2,9 @@ package applicationStart;
 	
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import applicationMain.ChartEditor;
 import entityClasses.Chart;
 import entityClasses.Member;
@@ -16,8 +16,10 @@ import newChart.NewChartView;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
+import javafx.scene.image.Image;
 
 
 public class Main extends Application {
@@ -34,10 +36,12 @@ public class Main extends Application {
 	private static Button openChart = new Button("Load Chart");
 	
 	private static FileChooser fileChooser = new FileChooser();
-	private static final String S = System.getProperty("file.separator");
 	
 	private static Pane root;
 	private static Scene scene;
+	
+	private static Label madeFor = new Label();
+	private static ImageView cccLogo = new ImageView();
 	
 	@Override
 	public void start(Stage stage) {
@@ -47,16 +51,22 @@ public class Main extends Application {
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			
 			title.setText("Seating Chart Maker");
-			setupLabelUI(title, "Arial", 32, 400, Pos.CENTER, 200, 25);
+			setupLabelUI(title, "Poppins", 32, 400, Pos.CENTER, 200, 25);
 			
-			setupButtonUI(newChart, "Arial", 16, 200, Pos.CENTER, 300, 250);
+			setupButtonUI(newChart, "Poppins", 16, 200, Pos.CENTER, 300, 250);
 			newChart.setOnAction((_) -> {
 				NewChartView.createChart(stage);
 			});
 			
-			fileChooser.setInitialDirectory(new File(System.getProperty("user.home")+S+"Downloads"));
+			cccLogo = new ImageView(new Image(Paths.get("C:\\Users\\jbw01\\Downloads\\cccLogo.png").toUri().toString()));
+			cccLogo.setFitWidth(200);
+			cccLogo.setPreserveRatio(true);
+			cccLogo.setLayoutX(590);
+			cccLogo.setLayoutY(500);
 			
-			setupButtonUI(openChart, "Arial", 16, 200, Pos.CENTER, 300, 350);
+			fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+			
+			setupButtonUI(openChart, "Poppins", 16, 200, Pos.CENTER, 300, 350);
 			openChart.setOnAction((_) -> {
 				fileChooser.setTitle("Select File To Load");
 				FileChooser.ExtensionFilter chartFilter = new FileChooser.ExtensionFilter("Chart Files (*.chrt)", "*.chrt");
@@ -102,7 +112,7 @@ public class Main extends Application {
 				}
 			});
 			
-			root.getChildren().addAll(title, newChart, openChart);
+			root.getChildren().addAll(title, newChart, openChart, madeFor, cccLogo);
 			display(stage);
 			
 			
