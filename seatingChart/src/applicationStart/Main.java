@@ -2,7 +2,6 @@ package applicationStart;
 	
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 import applicationMain.ChartEditor;
@@ -45,7 +44,6 @@ public class Main extends Application {
 	
 	@Override
 	public void start(Stage stage) {
-		try {
 			root = new Pane();
 			scene = new Scene(root,800,600);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -58,7 +56,7 @@ public class Main extends Application {
 				NewChartView.createChart(stage);
 			});
 			
-			cccLogo = new ImageView(new Image(Paths.get("C:\\Users\\jbw01\\Downloads\\cccLogo.png").toUri().toString()));
+			cccLogo = new ImageView(new Image(getClass().getResourceAsStream("/cccLogo.png")));
 			cccLogo.setFitWidth(200);
 			cccLogo.setPreserveRatio(true);
 			cccLogo.setLayoutX(590);
@@ -114,11 +112,6 @@ public class Main extends Application {
 			
 			root.getChildren().addAll(title, newChart, openChart, madeFor, cccLogo);
 			display(stage);
-			
-			
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public static void display(Stage inStage) {
