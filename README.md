@@ -1,8 +1,8 @@
 # Seating Chart Editor
 
 ## Installing Seating Chart Editor
-To download Seating Chart Editor, first go to this repository's '[releases](https://github.com/joshuabwhipple/SeatingChart/releases.)', then select the appropriate installer.
-For Apple computers, you will most likely need to download the "Mac (Apple Silicon)", but depending on the age of your device, you may need "Mac (Intel)". You can find out if your device has an Apple Silicon chip by following the instructions '[here](https://support.apple.com/en-us/116943.)'
+To download Seating Chart Editor, first go to this repository's [releases](https://github.com/joshuabwhipple/SeatingChart/releases.), then select the appropriate installer.
+For Apple computers, you will most likely need to download the "Mac (Apple Silicon)", but depending on the age of your device, you may need "Mac (Intel)". You can find out if your device has an Apple Silicon chip by following the instructions [here](https://support.apple.com/en-us/116943.).
 
 ## Using Seating Chart Editor
 
