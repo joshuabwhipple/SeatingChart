@@ -528,7 +528,7 @@ public class ChartEditor {
 				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
 				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
-				Text name = new Text(current.getName() + ", " + current.getType());
+				Text name = new Text(current.getName() + "\n" + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();

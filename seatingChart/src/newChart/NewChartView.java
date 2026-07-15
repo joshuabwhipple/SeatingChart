@@ -95,6 +95,7 @@ public class NewChartView {
 					formattingAlert.setTitle("Error Reading Members");
 					formattingAlert.setHeaderText("An error has occurred trying to read the list of members.");
 					formattingAlert.setContentText("This most commonly occurs when there is some formatting mistake. Check your list and try again.");
+					formattingAlert.showAndWait();
 				}
 			} else {
 				try {
@@ -106,6 +107,7 @@ public class NewChartView {
 					formattingAlert.setTitle("Error Reading Members");
 					formattingAlert.setHeaderText("An error has occurred trying to read the list of members.");
 					formattingAlert.setContentText("This most commonly occurs when there is some formatting mistake. Check your list and try again.");
+					formattingAlert.showAndWait();
 				}
 			}
 		});
