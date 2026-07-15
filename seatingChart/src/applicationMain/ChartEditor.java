@@ -32,6 +32,8 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -83,9 +85,6 @@ public class ChartEditor {
 	// Chart to edit
 	private static Chart chart;
 	
-	// TEMP TESTING
-	private static Label cursorPosition = new Label();
-	
 	// GUI Elements
 	
 	private static ToolBar toolBar = new ToolBar();
@@ -93,6 +92,7 @@ public class ChartEditor {
 	private static Button saveButton = new Button("Save");
 	private static Button saveAsButton = new Button("Save As");
 	private static Button loadButton = new Button("Open");
+	private static Button editNameButton = new Button("Edit Name");
 	private static Button editSeatsButton = new Button("Edit Seats");
 	private static Button editMembersButton = new Button("Edit Members");
 	private static Button editTypesButton = new Button("Edit Types");
@@ -101,6 +101,7 @@ public class ChartEditor {
 	// Placed above the exported files
 	private static Label chartName = new Label();
 	
+	private static Dialog<String> editNameDialog = new Dialog<>();
 	private static Dialog<Pair<String, String>> editSeatsDialog = new Dialog<>();
 	private static Dialog<String> editMembersDialog = new Dialog<>();
 	private static Dialog<String> editTypesDialog = new Dialog<>();
@@ -111,6 +112,8 @@ public class ChartEditor {
 	private static ScrollPane chartScroll;
 	private static Pane chartPane;
 
+	private static ImageView conductor = new ImageView();
+	
 	// Application Elements
 	
 	private static ChartEditor chartEditorPage;
@@ -135,6 +138,7 @@ public class ChartEditor {
 		chartPane = new Pane();
 		memberSeats = new ArrayList<StackPane>();
 		memberPane = new HBox();
+		editNameDialog = new Dialog<>();
 		editSeatsDialog = new Dialog<>();
 		editMembersDialog = new Dialog<>();
 		editTypesDialog = new Dialog<>();
@@ -201,11 +205,45 @@ public class ChartEditor {
 		saveAlert.setHeaderText("Are you sure you want to exit this chart?");
 		saveAlert.setContentText("Any unsaved changes will be lost.");
 		
-		editSeatsDialog.setTitle("Edit Seats");
 		ButtonType confirmButtonType = new ButtonType("Done", ButtonData.OK_DONE);
-		editSeatsDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+		
+		editNameDialog.setTitle("Edit Name");
+		editNameDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
 		
 		GridPane grid = new GridPane();
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(20, 150, 10, 10));
+		
+		TextField inName = new TextField();
+		inName.setText(chart.getName());
+		
+		grid.add(new Label("Name"), 0, 0);
+		grid.add(inName, 1, 0);
+		
+		editNameDialog.getDialogPane().setContent(grid);
+		
+		editNameDialog.setResultConverter(dialogButton -> {
+			if (dialogButton == confirmButtonType) {
+				return inName.getText();
+			}
+			return null;
+		});
+		
+		editNameButton.setOnAction((_) -> {
+			Optional<String> result = editNameDialog.showAndWait();
+			if (result.isPresent()) {
+				String newName = result.get();
+				chart.setName(newName);
+				edited = true;
+				ChartEditor.editChart(stage, chart);
+			}
+		});
+		
+		editSeatsDialog.setTitle("Edit Seats");
+		editSeatsDialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+		
+		grid = new GridPane();
 		grid.setHgap(10);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(20, 150, 10, 10));
@@ -423,7 +461,8 @@ public class ChartEditor {
 		chartScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 		
 		toolBar.getItems().addAll(newButton, saveButton, saveAsButton, loadButton, new Separator(),
-				editSeatsButton, editMembersButton, editTypesButton, new Separator(), exportButton, new Separator(), cursorPosition);
+				editNameButton, editSeatsButton, editMembersButton, editTypesButton, new Separator(),
+				exportButton, new Separator());
 		
 		rootPane.setTop(toolBar);
 		rootPane.setCenter(chartScroll);
@@ -446,6 +485,7 @@ public class ChartEditor {
 		// Display page
 		stage.setMaximized(true);
 		stage.setTitle("Seating Chart Editor - " + chart.getName());
+		if (edited) stage.setTitle(stage.getTitle() + "*");
 		stage.setScene(editScene);
 		stage.show();
 	}
@@ -457,6 +497,9 @@ public class ChartEditor {
 			editScene.startFullDrag();
 		});
 		
+		conductor = new ImageView(new Image(getClass().getResourceAsStream("/Conductor Image.png")));
+		conductor.setFitWidth(170);
+		conductor.setPreserveRatio(true);
 		
 		fileChooser = new FileChooser();
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -517,6 +560,9 @@ public class ChartEditor {
 				chartPane.getChildren().add(newSeat);
 			}
 		}
+		conductor.setLayoutX(seatBaseX + (seatsPerRow/2.0)*(seatWidth+10) - 170 / 2);
+		conductor.setLayoutY(seatBaseY + (seatHeight+10)*(rows) - 10);
+		chartPane.getChildren().add(conductor);
 		
 		// Members
 		for (int i = 0; i < readMembers.size(); ++i) {

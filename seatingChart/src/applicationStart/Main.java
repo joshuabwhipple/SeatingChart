@@ -39,7 +39,6 @@ public class Main extends Application {
 	private static Pane root;
 	private static Scene scene;
 	
-	private static Label madeFor = new Label();
 	private static ImageView cccLogo = new ImageView();
 	
 	@Override
@@ -110,7 +109,7 @@ public class Main extends Application {
 				}
 			});
 			
-			root.getChildren().addAll(title, newChart, openChart, madeFor, cccLogo);
+			root.getChildren().addAll(title, newChart, openChart, cccLogo);
 			display(stage);
 	}
 	
