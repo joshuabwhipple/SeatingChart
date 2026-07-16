@@ -381,14 +381,19 @@ public class ChartEditor {
 			
 			File file = fileChooser.showSaveDialog(stage);
 			
+			// Calculate dimensions of conductor image
+			Image conductorImage = conductor.getImage();
+			double imgRatio = conductorImage.getWidth() / conductorImage.getHeight();
+			// Image is shifted 10 pixels up to reduce white space
+			double displayedImageHeight = (conductor.getFitWidth() / imgRatio) - 10;
+			
 			int screenshotWidth;
 			if (chart.getRows() == 1) {
 				screenshotWidth = 90*chart.getSeatsPerRow() + 40;
 			} else {
 				screenshotWidth = 90*(chart.getSeatsPerRow() + 1) + 40;
 			}
-			int screenshotHeight = 110*chart.getRows() + 40 + (int) nameHeight;
-			
+			int screenshotHeight = 110*chart.getRows() + 40 + (int) nameHeight + (int) displayedImageHeight;
 			int startX = (int) seatBaseX;
 			if (chart.getRows() > 1) startX -= (seatWidth+10)/2;
 					
@@ -580,8 +585,6 @@ public class ChartEditor {
 				StackPane completedRectangle = new StackPane();
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
-					System.out.println(event.getSceneX() + ", " + event.getSceneY());
-					System.out.println((event.getSceneX() - seatWidth - 2) + ", " + (event.getSceneY() - seatHeight - 2));
 					memberPane.getChildren().remove(completedRectangle);
 					selectedMember = new Pair<>(completedRectangle, current);
 					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
@@ -590,13 +593,31 @@ public class ChartEditor {
 					rootPane.getChildren().add(completedRectangle);
 				});
 				completedRectangle.setOnMouseDragged(event -> {
-					if (selectedMember != null) {
-						selectedMember.getKey().setLayoutX(event.getSceneX() - seatWidth - 2);
-						selectedMember.getKey().setLayoutY(event.getSceneY() - seatHeight - 2);
+					selectedMember.getKey().setLayoutX(event.getSceneX() - seatWidth - 2);
+					selectedMember.getKey().setLayoutY(event.getSceneY() - seatHeight - 2);
+				});
+				completedRectangle.setOnMouseDragReleased((_) -> {
+					if (selectedMember != null && (current.getX() >= 0 || current.getY() >= 0)) {
+						Pair<Integer, Integer> tempCoords = current.getCoordinates();
+						Pair<Double, Double> tempLayoutCoords = new Pair<Double, Double>(completedRectangle.getLayoutX(), completedRectangle.getLayoutY());
+						current.setCoordinates(selectedMember.getValue().getCoordinates());
+						if (current.getX() < 0 || current.getY() < 0) {
+							chartPane.getChildren().remove(completedRectangle);
+							memberPane.getChildren().add(completedRectangle);
+						} else {
+							completedRectangle.setLayoutX(seatBaseX - ((selectedMember.getValue().getY()+1) % 2) * ((seatWidth+10)/2) + (seatWidth+10)*selectedMember.getValue().getX());
+							completedRectangle.setLayoutY(seatBaseY + (seatHeight+10)*selectedMember.getValue().getY());
+						}
+						selectedMember.getValue().setCoordinates(tempCoords);
+						selectedMember.getKey().setLayoutX(tempLayoutCoords.getKey());
+						selectedMember.getKey().setLayoutY(tempLayoutCoords.getValue());
+						rootPane.getChildren().remove(selectedMember.getKey());
+						chartPane.getChildren().add(selectedMember.getKey());
 					}
 				});
 				completedRectangle.setOnMouseReleased((_) -> {
 					rootPane.getChildren().remove(completedRectangle);
+					selectedMember.getValue().setCoordinates(-1, -1);
 					selectedMember = null;
 					memberPane.getChildren().add(completedRectangle);
 					completedRectangle.setCursor(Cursor.DEFAULT);
@@ -609,7 +630,7 @@ public class ChartEditor {
 				Rectangle newMember = new Rectangle(0, 0, seatWidth, seatHeight);
 				newMember.setFill(current.getColor());
 				newMember.setStroke(Color.BLACK);
-				Text name = new Text(current.getName() + ", " + current.getType());
+				Text name = new Text(current.getName() + "\n" + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
 				StackPane completedRectangle = new StackPane();
@@ -617,8 +638,6 @@ public class ChartEditor {
 				completedRectangle.setLayoutY(seatBaseY + (seatHeight+10)*current.getY());
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
-					System.out.println(event.getSceneX() + ", " + event.getSceneY());
-					System.out.println((event.getSceneX() - seatWidth - 2) + ", " + (event.getSceneY() - seatHeight - 2));
 					memberPane.getChildren().remove(completedRectangle);
 					selectedMember = new Pair<>(completedRectangle, current);
 					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
@@ -630,8 +649,28 @@ public class ChartEditor {
 					completedRectangle.setLayoutX(event.getSceneX() - seatWidth - 2);
 					completedRectangle.setLayoutY(event.getSceneY() - seatHeight - 2);
 				});
+				completedRectangle.setOnMouseDragReleased((_) -> {
+					if (selectedMember != null && (current.getX() >= 0 || current.getY() >= 0)) {
+						Pair<Integer, Integer> tempCoords = current.getCoordinates();
+						Pair<Double, Double> tempLayoutCoords = new Pair<Double, Double>(completedRectangle.getLayoutX(), completedRectangle.getLayoutY());
+						current.setCoordinates(selectedMember.getValue().getCoordinates());
+						if (current.getX() < 0 || current.getY() < 0) {
+							chartPane.getChildren().remove(completedRectangle);
+							memberPane.getChildren().add(completedRectangle);
+						} else {
+							completedRectangle.setLayoutX(seatBaseX - ((selectedMember.getValue().getY()+1) % 2) * ((seatWidth+10)/2) + (seatWidth+10)*selectedMember.getValue().getX());
+							completedRectangle.setLayoutY(seatBaseY + (seatHeight+10)*selectedMember.getValue().getY());
+						}
+						selectedMember.getValue().setCoordinates(tempCoords);
+						selectedMember.getKey().setLayoutX(tempLayoutCoords.getKey());
+						selectedMember.getKey().setLayoutY(tempLayoutCoords.getValue());
+						rootPane.getChildren().remove(selectedMember.getKey());
+						chartPane.getChildren().add(selectedMember.getKey());
+					}
+				});
 				completedRectangle.setOnMouseReleased((_) -> {
 					rootPane.getChildren().remove(completedRectangle);
+					selectedMember.getValue().setCoordinates(-1, -1);
 					selectedMember = null;
 					memberPane.getChildren().add(completedRectangle);
 					completedRectangle.setCursor(Cursor.DEFAULT);
