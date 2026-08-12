@@ -127,12 +127,14 @@ public class Chart {
 	
 	private void readTypes(String typesList) {
 		types = new ArrayList<Pair<String, Color>>();
+		ArrayList<String> processedNames = new ArrayList<>();
 		if (typesList != null) {
 			Scanner typeReader = new Scanner(typesList);
 			while (typeReader.hasNextLine()) {
 				String data = typeReader.nextLine();
 				int commaIndex = data.indexOf(',');
 				String typeName = data.substring(0, commaIndex).strip();
+				if (!processedNames.contains(typeName)) {
 				Color typeColor = Color.WHITE;
 				try {
 					typeColor = Color.web(data.substring(commaIndex+1).replaceAll("\\s", "").toLowerCase());
@@ -145,6 +147,10 @@ public class Chart {
 				}
 				Pair<String, Color> newType = new Pair<>(typeName, typeColor);
 				types.add(newType);
+				processedNames.add(typeName);
+				} else {
+					System.out.println("Already has color " + typeName);
+				}
 			}
 			typeReader.close();
 		} else {
