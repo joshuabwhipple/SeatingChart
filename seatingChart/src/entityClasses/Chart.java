@@ -126,6 +126,7 @@ public class Chart {
 	}
 	
 	private void readTypes(String typesList) {
+		types = new ArrayList<Pair<String, Color>>();
 		if (typesList != null) {
 			Scanner typeReader = new Scanner(typesList);
 			while (typeReader.hasNextLine()) {
