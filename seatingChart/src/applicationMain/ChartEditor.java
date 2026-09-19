@@ -582,6 +582,7 @@ public class ChartEditor {
 				Text name = new Text(current.getName() + "\n" + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
+				name.setFont(new Font("Poppins", 20));
 				StackPane completedRectangle = new StackPane();
 				completedRectangle.getChildren().addAll(newMember, name);
 				completedRectangle.setOnMousePressed(event -> {
@@ -633,6 +634,7 @@ public class ChartEditor {
 				Text name = new Text(current.getName() + "\n" + current.getType());
 				name.setWrappingWidth(seatWidth);
 				name.setTextAlignment(TextAlignment.CENTER);
+				name.setFont(new Font("Poppins", 20));
 				StackPane completedRectangle = new StackPane();
 				completedRectangle.setLayoutX(seatX + (seatWidth+10)*current.getX());
 				completedRectangle.setLayoutY(seatBaseY + (seatHeight+10)*current.getY());
